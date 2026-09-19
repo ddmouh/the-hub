@@ -1,0 +1,26 @@
+## Visual Studio / C# / .NET Ignore Rules
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+TheHub-App/
+TestResults/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Scratch & Temporary
+scratch/
+download_ffmpeg.ps1
+node_modules/
+
+# Video wallpaper samples (large binaries)
+*.mp4
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

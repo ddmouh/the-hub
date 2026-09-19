@@ -1,0 +1,104 @@
+<Window x:Class="TheHub.App.Controls.ExitDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Exit The Hub"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Width="470"
+        SizeToContent="Height">
+    <Window.Resources>
+        <!-- Style for Choice Cards -->
+        <Style x:Key="ExitChoiceCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#15151B"/>
+            <Setter Property="BorderBrush" Value="#2A2A36"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1C1C24"/>
+                    <Setter Property="BorderBrush" Value="#3F3F50"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#101014" BorderBrush="#2A2A34" BorderThickness="1.5" CornerRadius="16" Padding="20" Margin="10">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.8" ShadowDepth="4"/>
+        </Border.Effect>
+        <StackPanel>
+            <!-- Header (Draggable) -->
+            <Grid MouseLeftButtonDown="OnHeaderMouseDown" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Width="36" Height="36" Background="#1E1E28" BorderBrush="#333344" BorderThickness="1" CornerRadius="10" Margin="0,0,12,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="⚡" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="إغلاق لوحة التحكم | Close Dashboard" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF"/>
+                    <TextBlock Text="حدد الإجراء المطلوب تنفيذه عند الإغلاق:" FontSize="11.5" Foreground="#71717A" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="✕" Width="28" Height="28" Background="Transparent" Foreground="#71717A" BorderThickness="0" FontSize="13" Cursor="Hand" Click="OnCancelClick"/>
+            </Grid>
+
+            <!-- Option 1: Hide Dashboard Only -->
+            <Border Style="{StaticResource ExitChoiceCardStyle}" Margin="0,0,0,10" MouseLeftButtonDown="OnHideDashboardClick">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="38"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="32" Height="32" Background="#172554" CornerRadius="8" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="👁️" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                        <TextBlock Text="إغلاق لوحة التحكم فقط (تشغيل بالخلفية)" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                        <TextBlock Text="تبقى الميزات الخلفية (الخلفيات المتحركة، Dynamic Island، عجلة Alt+Z) نشطة بالكامل في صينية النظام." FontSize="11" Foreground="#9CA3AF" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Option 2: Exit Application Completely -->
+            <Border Style="{StaticResource ExitChoiceCardStyle}" Margin="0,0,0,14" MouseLeftButtonDown="OnExitCompletelyClick">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="38"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="32" Height="32" Background="#450A0A" CornerRadius="8" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="🛑" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                        <TextBlock Text="إغلاق التطبيق بالكامل (إنهاء كافة العمليات)" FontSize="13" FontWeight="SemiBold" Foreground="#FCA5A5"/>
+                        <TextBlock Text="إيقاف وحذف نوافذ الخلفيات المتحركة التابعة لـ WorkerW، تنظيف خطافات النظام، وإغلاق The Hub تماماً." FontSize="11" Foreground="#9CA3AF" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Bottom Actions -->
+            <Grid>
+                <Button Content="إلغاء / Cancel" HorizontalAlignment="Right" Padding="16,6" FontSize="11.5" FontWeight="SemiBold" Background="#1E1E24" Foreground="#E4E4E7" BorderBrush="#2E2E38" BorderThickness="1" Cursor="Hand" Click="OnCancelClick">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

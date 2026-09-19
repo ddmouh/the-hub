@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TheHub.Common\TheHub.Common.csproj" />
+    <ProjectReference Include="..\TheHub.Core\TheHub.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Flyleaf.FFmpeg" Version="9.0.0" />
+    <PackageReference Include="FlyleafLib" Version="3.11.8" />
+  </ItemGroup>
+
+</Project>
