@@ -328,7 +328,19 @@ public partial class MainWindow : Window
 
             // Initialize Wallpaper Gallery, multi-monitor selector & active wallpaper(s)
             ChkPauseWallpaperFullscreen.IsChecked = settings.WallpaperPauseOnFullscreen;
+            ChkPauseWallpaperBattery.IsChecked = settings.WallpaperPauseOnBattery;
             ChkMuteWallpaperAudio.IsChecked = settings.WallpaperMuted;
+
+            string currentFit = settings.WallpaperFitMode ?? "Fill";
+            foreach (ComboBoxItem item in CmbWallpaperFit.Items)
+            {
+                if (string.Equals(item.Content?.ToString(), currentFit, StringComparison.OrdinalIgnoreCase))
+                {
+                    CmbWallpaperFit.SelectedItem = item;
+                    break;
+                }
+            }
+            _wallpaperManager.SetFitMode(currentFit);
             _selectedMonitorTarget = !string.IsNullOrEmpty(settings.SelectedTargetMonitor) ? settings.SelectedTargetMonitor : "ALL";
             PopulateMonitorSelectorUI();
             RefreshWallpapersGallery();
@@ -1132,9 +1144,23 @@ public partial class MainWindow : Window
 
     private void OnWallpaperSettingChanged(object sender, RoutedEventArgs e)
     {
-        if (ChkPauseWallpaperFullscreen == null) return;
+        if (ChkPauseWallpaperFullscreen == null || ChkPauseWallpaperBattery == null) return;
         SettingsManager.Current.WallpaperPauseOnFullscreen = ChkPauseWallpaperFullscreen.IsChecked ?? true;
+        SettingsManager.Current.WallpaperPauseOnBattery = ChkPauseWallpaperBattery.IsChecked ?? true;
         SettingsManager.SaveSettings();
+        _wallpaperManager.CheckPowerState();
+    }
+
+    private void OnWallpaperFitSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbWallpaperFit?.SelectedItem is ComboBoxItem selectedItem)
+        {
+            string fitMode = selectedItem.Content?.ToString() ?? "Fill";
+            SettingsManager.Current.WallpaperFitMode = fitMode;
+            SettingsManager.SaveSettings();
+            _wallpaperManager.SetFitMode(fitMode);
+            AppLogger.Log($"[UI] Wallpaper fit mode changed to: {fitMode}");
+        }
     }
 
     private void OnWallpaperMuteChanged(object sender, RoutedEventArgs e)

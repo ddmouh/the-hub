@@ -19,10 +19,16 @@ public partial class LiveWallpaperWindow : Window
     private bool _isAttached = false;
     private bool _isPlaying = false;
     private bool _isPaused = false;
+    private bool _isBatteryPaused = false;
+    private bool _isCoveragePaused = false;
+    private string _fitMode = "Fill";
     private Rectangle _bounds;
 
     public Player? Player { get; private set; }
     public bool IsLiveActive => _isPlaying && !_isPaused;
+    public bool IsBatteryPaused => _isBatteryPaused;
+    public bool IsCoveragePaused => _isCoveragePaused;
+    public string CurrentFitMode => _fitMode;
     public Rectangle ScreenBounds => _bounds;
     public string DeviceName { get; }
     public event Action<string, string>? MediaPlaybackFailed;
@@ -189,7 +195,7 @@ public partial class LiveWallpaperWindow : Window
         {
             var config = new Config();
             config.Video.VideoAcceleration = true; // Hardware DirectX 11 D3D11VA decoding
-            config.Video.AspectRatio = AspectRatio.Fill;
+            config.Video.AspectRatio = MapFitModeToAspectRatio(_fitMode);
             config.Player.AutoPlay = true;
 
             Player = new Player(config);
@@ -290,8 +296,48 @@ public partial class LiveWallpaperWindow : Window
         }
     }
 
+    public void SetFitMode(string fitMode)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(() => SetFitMode(fitMode));
+            return;
+        }
+
+        _fitMode = string.IsNullOrWhiteSpace(fitMode) ? "Fill" : fitMode;
+        if (Player != null)
+        {
+            try
+            {
+                Player.Config.Video.AspectRatio = MapFitModeToAspectRatio(_fitMode);
+                AppLogger.Log($"[WallpaperEngine] LiveWallpaperWindow '{DeviceName}' set fit mode to '{_fitMode}' (AspectRatio: {Player.Config.Video.AspectRatio})");
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Log($"[WallpaperEngine] SetFitMode error on '{DeviceName}': {ex.Message}");
+            }
+        }
+    }
+
+    public static AspectRatio MapFitModeToAspectRatio(string fitMode)
+    {
+        return fitMode?.ToLowerInvariant() switch
+        {
+            "fit" => AspectRatio.Keep,
+            "stretch" => AspectRatio.Custom,
+            "fill" => AspectRatio.Fill,
+            _ => AspectRatio.Fill
+        };
+    }
+
     public void Pause()
     {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(Pause);
+            return;
+        }
+
         if (_isPlaying && !_isPaused)
         {
             Player?.Pause();
@@ -302,11 +348,55 @@ public partial class LiveWallpaperWindow : Window
 
     public void Resume()
     {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(Resume);
+            return;
+        }
+
         if (_isPlaying && _isPaused)
         {
             Player?.Play();
             _isPaused = false;
             AppLogger.Log($"LiveWallpaperWindow resumed on '{DeviceName}'");
+        }
+    }
+
+    public void SetBatteryPaused(bool paused)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(() => SetBatteryPaused(paused));
+            return;
+        }
+
+        _isBatteryPaused = paused;
+        if (paused)
+        {
+            Pause();
+        }
+        else if (!_isCoveragePaused)
+        {
+            Resume();
+        }
+    }
+
+    public void SetCoveragePaused(bool paused)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(() => SetCoveragePaused(paused));
+            return;
+        }
+
+        _isCoveragePaused = paused;
+        if (paused)
+        {
+            Pause();
+        }
+        else if (!_isBatteryPaused)
+        {
+            Resume();
         }
     }
 
@@ -321,6 +411,8 @@ public partial class LiveWallpaperWindow : Window
         {
             _isPlaying = false;
             _isPaused = false;
+            _isBatteryPaused = false;
+            _isCoveragePaused = false;
 
             // 1. Stop playback and release Flyleaf Player resources
             if (Player != null)

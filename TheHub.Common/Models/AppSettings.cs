@@ -91,6 +91,8 @@ public class AppSettings
     public string SelectedTargetMonitor { get; set; } = "ALL";
     public bool WallpaperMuted { get; set; } = true;
     public bool WallpaperPauseOnFullscreen { get; set; } = true;
+    public bool WallpaperPauseOnBattery { get; set; } = true;
+    public string WallpaperFitMode { get; set; } = "Fill"; // "Fill", "Fit", "Stretch"
 
     public static AppSettings CreateDefault()
     {

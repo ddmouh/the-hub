@@ -537,10 +537,19 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <CheckBox x:Name="ChkPauseWallpaperFullscreen" Content="Auto-pause animated wallpapers in games &amp; fullscreen" Foreground="#E4E4E7" FontSize="12" Margin="0,0,24,0" Checked="OnWallpaperSettingChanged" Unchecked="OnWallpaperSettingChanged" ToolTip="Completely stops live video graphics and CPU/GPU usage when full-screen apps or games run"/>
-                                        <CheckBox x:Name="ChkMuteWallpaperAudio" Content="Mute live wallpaper sound" Foreground="#E4E4E7" FontSize="12" Margin="0,0,20,0" Checked="OnWallpaperMuteChanged" Unchecked="OnWallpaperMuteChanged"/>
-                                    </StackPanel>
+                                    <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <CheckBox x:Name="ChkPauseWallpaperFullscreen" Content="Auto-pause in fullscreen/games" Foreground="#E4E4E7" FontSize="12" Margin="0,0,18,0" VerticalAlignment="Center" Checked="OnWallpaperSettingChanged" Unchecked="OnWallpaperSettingChanged" ToolTip="Pauses live video when full-screen apps or games run on that display"/>
+                                        <CheckBox x:Name="ChkPauseWallpaperBattery" Content="Pause on battery power" Foreground="#E4E4E7" FontSize="12" Margin="0,0,18,0" VerticalAlignment="Center" Checked="OnWallpaperSettingChanged" Unchecked="OnWallpaperSettingChanged" ToolTip="Freezes live video wallpapers when running on battery power to conserve energy"/>
+                                        <CheckBox x:Name="ChkMuteWallpaperAudio" Content="Mute sound" Foreground="#E4E4E7" FontSize="12" Margin="0,0,18,0" VerticalAlignment="Center" Checked="OnWallpaperMuteChanged" Unchecked="OnWallpaperMuteChanged"/>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                                            <TextBlock Text="Fit:" Foreground="#A1A1AA" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <ComboBox x:Name="CmbWallpaperFit" Width="95" Height="26" SelectionChanged="OnWallpaperFitSelectionChanged" FontSize="12">
+                                                <ComboBoxItem Content="Fill" ToolTip="Fill screen (UniformToFill)"/>
+                                                <ComboBoxItem Content="Fit" ToolTip="Fit entire video within screen (Uniform)"/>
+                                                <ComboBoxItem Content="Stretch" ToolTip="Stretch video to screen boundaries (Fill)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </WrapPanel>
                                     <Button Grid.Column="1" Content="⟲ Reset Windows Wallpaper" Style="{StaticResource SmallActionButtonStyle}" Click="OnResetWallpaperClick" ToolTip="Stop live video wallpaper, clear WorkerW, and restore standard desktop"/>
                                 </Grid>
                             </Border>

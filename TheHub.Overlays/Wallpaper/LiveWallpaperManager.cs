@@ -1,5 +1,7 @@
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using TheHub.Common.Config;
 using TheHub.Core.Native;
 
@@ -7,18 +9,233 @@ namespace TheHub.Overlays.Wallpaper;
 
 /// <summary>
 /// Manages live animated wallpaper instances across connected physical monitors.
-/// Holds a centralized dictionary of active windows keyed by monitor DeviceName.
+/// Features battery energy saving, per-monitor display pause optimization, and fit modes.
 /// </summary>
-public class WallpaperManager
+public class WallpaperManager : IDisposable
 {
     private readonly Dictionary<string, LiveWallpaperWindow> _activeWallpapers = new(StringComparer.OrdinalIgnoreCase);
     private bool _isMuted = true;
     private double _volume = 0.0;
+    private string _currentFitMode = "Fill";
+    private bool _isBatteryOffline = false;
+    private readonly System.Threading.Timer? _optimizationTimer;
+    private bool _disposed = false;
 
     public bool IsLiveActive => _activeWallpapers.Values.Any(w => w.IsLiveActive);
     public IReadOnlyDictionary<string, LiveWallpaperWindow> ActiveWallpapers => _activeWallpapers;
     public IReadOnlyDictionary<string, LiveWallpaperWindow> ActiveInstances => _activeWallpapers;
+    public string CurrentFitMode => _currentFitMode;
+    public bool IsBatteryOffline => _isBatteryOffline;
     public event Action<string, string>? WallpaperPlaybackFailed;
+
+    public WallpaperManager()
+    {
+        _currentFitMode = SettingsManager.Current.WallpaperFitMode ?? "Fill";
+
+        try
+        {
+            Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"WallpaperManager: Error subscribing to PowerModeChanged: {ex.Message}");
+        }
+
+        CheckPowerState();
+
+        // Start per-monitor display pause optimization timer (~300ms)
+        _optimizationTimer = new System.Threading.Timer(CheckDisplayOptimizationState, null, 1000, 300);
+    }
+
+    public void CheckPowerState()
+    {
+        try
+        {
+            if (Win32Api.GetSystemPowerStatus(out var status))
+            {
+                // ACLineStatus: 0 = Offline (battery), 1 = Online (AC), 255 = Unknown
+                bool onBattery = status.ACLineStatus == 0;
+                _isBatteryOffline = onBattery;
+                bool shouldPause = onBattery && SettingsManager.Current.WallpaperPauseOnBattery;
+
+                foreach (var win in _activeWallpapers.Values)
+                {
+                    win.SetBatteryPaused(shouldPause);
+                }
+
+                AppLogger.Log($"[WallpaperManager] PowerState check: ACLineStatus={status.ACLineStatus}, OnBattery={onBattery}, ShouldPause={shouldPause}");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"[WallpaperManager] CheckPowerState error: {ex.Message}");
+        }
+    }
+
+    private void OnPowerModeChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == Microsoft.Win32.PowerModes.StatusChange)
+        {
+            AppLogger.Log("[WallpaperManager] PowerModeChanged status event received.");
+            CheckPowerState();
+        }
+    }
+
+    public void SetFitMode(string fitMode)
+    {
+        _currentFitMode = string.IsNullOrWhiteSpace(fitMode) ? "Fill" : fitMode;
+        foreach (var win in _activeWallpapers.Values)
+        {
+            win.SetFitMode(_currentFitMode);
+        }
+        AppLogger.Log($"[WallpaperManager] Applied fit mode '{_currentFitMode}' to {_activeWallpapers.Count} active wallpaper window(s).");
+    }
+
+    private void CheckDisplayOptimizationState(object? state)
+    {
+        if (_disposed || _activeWallpapers.Count == 0) return;
+
+        try
+        {
+            var settings = SettingsManager.Current;
+
+            // If auto-pause on fullscreen/maximized is disabled, ensure any coverage pause is released
+            if (!settings.WallpaperPauseOnFullscreen)
+            {
+                foreach (var win in _activeWallpapers.Values)
+                {
+                    if (win.IsCoveragePaused)
+                    {
+                        win.SetCoveragePaused(false);
+                    }
+                }
+                return;
+            }
+
+            // Find foreground window
+            IntPtr foreground = Win32Api.GetForegroundWindow();
+            if (foreground == IntPtr.Zero)
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            // If foreground window is desktop, shell, or WorkerW: desktop is visible, so resume all
+            var desktop = Win32Api.GetDesktopWindow();
+            var shell = Win32Api.GetShellWindow();
+            if (foreground == desktop || foreground == shell)
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            var classNameSb = new StringBuilder(256);
+            Win32Api.GetClassName(foreground, classNameSb, classNameSb.Capacity);
+            string className = classNameSb.ToString();
+            if (className == "Progman" ||
+                className == "WorkerW" ||
+                className == "Shell_TrayWnd" ||
+                className == "Shell_SecondaryTrayWnd")
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            if (!Win32Api.IsWindowVisible(foreground))
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            // If window is minimized, it does not cover any screen
+            int style = Win32Api.GetWindowLong(foreground, Win32Api.GWL_STYLE);
+            if ((style & Win32Api.WS_MINIMIZE) != 0)
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            // Find monitor of foreground window
+            IntPtr foregroundMonitor = Win32Api.MonitorFromWindow(foreground, Win32Api.MONITOR_DEFAULTTONEAREST);
+            if (foregroundMonitor == IntPtr.Zero)
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            var mi = new DisplayMonitorHelper.MONITORINFOEX();
+            mi.cbSize = Marshal.SizeOf<DisplayMonitorHelper.MONITORINFOEX>();
+            if (!DisplayMonitorHelper.GetMonitorInfo(foregroundMonitor, ref mi))
+            {
+                ResumeAllCoverage();
+                return;
+            }
+
+            string activeMonitorDevice = mi.szDevice ?? string.Empty;
+
+            // Determine if window covers this monitor:
+            // 1. IsZoomed (Maximized)
+            // 2. Window covers entire physical monitor bounds (Fullscreen game / borderless app)
+            bool isZoomed = Win32Api.IsZoomed(foreground);
+            bool isFullscreen = false;
+            if (!isZoomed && Win32Api.GetWindowRect(foreground, out var rect))
+            {
+                isFullscreen = (rect.Left <= mi.rcMonitor.Left + 1 &&
+                                rect.Top <= mi.rcMonitor.Top + 1 &&
+                                rect.Right >= mi.rcMonitor.Right - 1 &&
+                                rect.Bottom >= mi.rcMonitor.Bottom - 1);
+            }
+
+            bool coversMonitor = isZoomed || isFullscreen;
+
+            // Apply per-screen pause optimization:
+            foreach (var kvp in _activeWallpapers)
+            {
+                string deviceName = kvp.Key;
+                var win = kvp.Value;
+
+                bool isTargetScreen = string.Equals(deviceName, activeMonitorDevice, StringComparison.OrdinalIgnoreCase)
+                    || (win.ScreenBounds.Left == mi.rcMonitor.Left && win.ScreenBounds.Top == mi.rcMonitor.Top);
+
+                if (isTargetScreen)
+                {
+                    if (coversMonitor && !win.IsCoveragePaused)
+                    {
+                        win.SetCoveragePaused(true);
+                        AppLogger.Log($"[WallpaperManager] Display '{deviceName}' auto-paused (window '{className}' maximized/fullscreen).");
+                    }
+                    else if (!coversMonitor && win.IsCoveragePaused)
+                    {
+                        win.SetCoveragePaused(false);
+                        AppLogger.Log($"[WallpaperManager] Display '{deviceName}' auto-resumed (window no longer covers monitor).");
+                    }
+                }
+                else
+                {
+                    // Non-covered screens continue playing
+                    if (win.IsCoveragePaused)
+                    {
+                        win.SetCoveragePaused(false);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Transient polling catch
+        }
+    }
+
+    private void ResumeAllCoverage()
+    {
+        foreach (var win in _activeWallpapers.Values)
+        {
+            if (win.IsCoveragePaused)
+            {
+                win.SetCoveragePaused(false);
+            }
+        }
+    }
 
     /// <summary>
     /// Launches independent live wallpaper instances across all connected physical monitors (Duplicate / All mode).
@@ -56,6 +273,8 @@ public class WallpaperManager
         if (monitors.Count == 0)
         {
             var defaultWin = new LiveWallpaperWindow();
+            defaultWin.SetFitMode(_currentFitMode);
+            defaultWin.SetBatteryPaused(_isBatteryOffline && SettingsManager.Current.WallpaperPauseOnBattery);
             defaultWin.Show();
             defaultWin.PlayVideo(absolutePath, isMuted, volume);
             _activeWallpapers["Primary"] = defaultWin;
@@ -67,6 +286,8 @@ public class WallpaperManager
             try
             {
                 var win = new LiveWallpaperWindow(monitor);
+                win.SetFitMode(_currentFitMode);
+                win.SetBatteryPaused(_isBatteryOffline && SettingsManager.Current.WallpaperPauseOnBattery);
                 win.MediaPlaybackFailed += (dev, err) =>
                 {
                     _activeWallpapers.Remove(dev);
@@ -76,7 +297,7 @@ public class WallpaperManager
                 win.PlayVideo(absolutePath, isMuted, volume);
                 _activeWallpapers[monitor.DeviceName] = win;
 
-                AppLogger.Log($"WallpaperManager: Created wallpaper window for '{monitor.DeviceName}' [{monitor.Width}x{monitor.Height} at ({monitor.Bounds.Left},{monitor.Bounds.Top})]");
+                AppLogger.Log($"WallpaperManager: Created wallpaper window for '{monitor.DeviceName}' [{monitor.Width}x{monitor.Height} at ({monitor.Bounds.Left},{monitor.Bounds.Top})] FitMode: {_currentFitMode}");
             }
             catch (Exception ex)
             {
@@ -147,6 +368,8 @@ public class WallpaperManager
         try
         {
             var win = new LiveWallpaperWindow(targetMonitor);
+            win.SetFitMode(_currentFitMode);
+            win.SetBatteryPaused(_isBatteryOffline && SettingsManager.Current.WallpaperPauseOnBattery);
             win.MediaPlaybackFailed += (dev, err) =>
             {
                 _activeWallpapers.Remove(dev);
@@ -156,7 +379,7 @@ public class WallpaperManager
             win.PlayVideo(absolutePath, isMuted, volume);
             _activeWallpapers[targetDevice] = win;
 
-            AppLogger.Log($"WallpaperManager: Created individual wallpaper window for '{targetDevice}' [{targetMonitor.Width}x{targetMonitor.Height} at ({targetMonitor.Bounds.Left},{targetMonitor.Bounds.Top})]");
+            AppLogger.Log($"WallpaperManager: Created individual wallpaper window for '{targetDevice}' [{targetMonitor.Width}x{targetMonitor.Height} at ({targetMonitor.Bounds.Left},{targetMonitor.Bounds.Top})] FitMode: {_currentFitMode}");
         }
         catch (Exception ex)
         {
@@ -256,6 +479,26 @@ public class WallpaperManager
         {
             win.SetVolume(volume);
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        try
+        {
+            Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        }
+        catch { }
+
+        try
+        {
+            _optimizationTimer?.Dispose();
+        }
+        catch { }
+
+        DisposeWallpapers();
     }
 }
 

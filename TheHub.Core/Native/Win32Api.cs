@@ -277,4 +277,29 @@ public static class Win32Api
 
     [DllImport("shell32.dll")]
     public static extern int SHQueryUserNotificationState(out QUERY_USER_NOTIFICATION_STATE pquns);
+
+    public const int WS_MINIMIZE = 0x20000000;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsZoomed(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsIconic(IntPtr hWnd);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SYSTEM_POWER_STATUS
+    {
+        public byte ACLineStatus; // 0 = Offline (Battery), 1 = Online (AC), 255 = Unknown
+        public byte BatteryFlag;
+        public byte BatteryLifePercent;
+        public byte SystemStatusFlag;
+        public int BatteryLifeTime;
+        public int BatteryFullLifeTime;
+    }
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS lpSystemPowerStatus);
 }

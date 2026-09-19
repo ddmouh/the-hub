@@ -387,5 +387,31 @@ public class HubCoreTests
         Assert.Equal("#27272A", staticItem.CardBorderBrush);
         Assert.Equal("Apply", staticItem.StatusText);
     }
+
+    [Fact]
+    public void AppSettings_WallpaperPowerAndFit_DefaultValuesAndSerialization()
+    {
+        var settings = AppSettings.CreateDefault();
+        Assert.True(settings.WallpaperPauseOnBattery);
+        Assert.Equal("Fill", settings.WallpaperFitMode);
+
+        settings.WallpaperPauseOnBattery = false;
+        settings.WallpaperFitMode = "Fit";
+
+        string json = JsonSerializer.Serialize(settings);
+        var deserialized = JsonSerializer.Deserialize<AppSettings>(json);
+
+        Assert.NotNull(deserialized);
+        Assert.False(deserialized.WallpaperPauseOnBattery);
+        Assert.Equal("Fit", deserialized.WallpaperFitMode);
+    }
+
+    [Fact]
+    public void Win32Api_SystemPowerStatus_CanQueryWithoutError()
+    {
+        bool success = TheHub.Core.Native.Win32Api.GetSystemPowerStatus(out var status);
+        Assert.True(success);
+        Assert.True(status.ACLineStatus == 0 || status.ACLineStatus == 1 || status.ACLineStatus == 255);
+    }
 }
 
