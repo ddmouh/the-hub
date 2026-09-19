@@ -458,6 +458,15 @@ public partial class MainWindow : Window
         WindowState = (WindowState == WindowState.Maximized) ? WindowState.Normal : WindowState.Maximized;
     }
 
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+        if (WindowState == WindowState.Minimized)
+        {
+            MemoryOptimizer.TrimMemory();
+        }
+    }
+
     protected override void OnClosing(CancelEventArgs e)
     {
         if (_isShuttingDown)
@@ -496,6 +505,7 @@ public partial class MainWindow : Window
                 case Controls.ExitDialogChoice.HideDashboardOnly:
                     AppLogger.Log("User selected: Hide dashboard only (continue running in background)");
                     Hide();
+                    MemoryOptimizer.TrimMemory();
                     break;
                 case Controls.ExitDialogChoice.ExitCompletely:
                     AppLogger.Log("User selected: Exit application completely");
@@ -512,6 +522,7 @@ public partial class MainWindow : Window
         {
             AppLogger.Log($"ShowCustomExitDialog error: {ex.Message}");
             Hide();
+            MemoryOptimizer.TrimMemory();
         }
     }
 

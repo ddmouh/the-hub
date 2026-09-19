@@ -302,4 +302,7 @@ public static class Win32Api
     [DllImport("kernel32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS lpSystemPowerStatus);
+
+    [DllImport("psapi.dll")]
+    public static extern int EmptyWorkingSet(IntPtr hwProc);
 }

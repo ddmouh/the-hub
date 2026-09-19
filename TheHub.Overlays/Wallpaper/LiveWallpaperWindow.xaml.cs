@@ -7,6 +7,7 @@ using FlyleafLib;
 using FlyleafLib.MediaPlayer;
 using TheHub.Common.Config;
 using TheHub.Core.Native;
+using TheHub.Core.Services;
 
 namespace TheHub.Overlays.Wallpaper;
 
@@ -218,6 +219,7 @@ public partial class LiveWallpaperWindow : Window
                         _isPlaying = true;
                         _isPaused = false;
                         AppLogger.Log($"[WallpaperEngine] Flyleaf playing video successfully on '{DeviceName}'");
+                        _ = Task.Delay(1500).ContinueWith(_ => MemoryOptimizer.TrimMemory());
                     }
                 });
             };
