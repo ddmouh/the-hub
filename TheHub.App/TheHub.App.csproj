@@ -26,4 +26,11 @@
     <None Include="FFmpeg\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <Target Name="CopyToTheHubApp" AfterTargets="Build">
+    <ItemGroup>
+      <OutputFiles Include="$(TargetDir)TheHub*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(OutputFiles)" DestinationFolder="$(MSBuildThisFileDirectory)..\TheHub-App\" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

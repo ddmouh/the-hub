@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TheHub.Overlays.DynamicIsland"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="Dynamic Island"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -11,6 +12,9 @@
         Focusable="False"
         ShowInTaskbar="False"
         WindowStartupLocation="Manual">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" GlassFrameThickness="0" ResizeBorderThickness="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
     <Window.DataContext>
         <local:DynamicIslandViewModel/>
     </Window.DataContext>
@@ -288,6 +292,7 @@
                 Width="190" Height="38"
                 SnapsToDevicePixels="True"
                 UseLayoutRounding="True"
+                ClipToBounds="False"
                 Cursor="Hand"
                 MouseEnter="OnMouseEnter"
                 MouseLeave="OnMouseLeave"
@@ -301,7 +306,7 @@
                 <DropShadowEffect BlurRadius="22" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.65"/>
             </Border.Effect>
 
-            <Grid Margin="10,5">
+            <Grid Margin="10,5" ClipToBounds="False">
                 <!-- COMPACT VIEW (Normal / Ambient Activity state) -->
                 <Grid x:Name="CompactView" Visibility="Visible">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -345,7 +350,7 @@
                     </Grid>
 
                     <!-- Row 1: Full Dashboard Controls (Sliders, Devices, Mic, Deafen) -->
-                    <StackPanel x:Name="DashboardControlsPanel" Grid.Row="1" Visibility="Visible" Margin="0,6,0,0">
+                    <StackPanel x:Name="DashboardControlsPanel" Grid.Row="1" Visibility="Visible" Margin="0,6,0,0" ClipToBounds="False">
                         <!-- Media Playback Controls (if media active) -->
                         <StackPanel x:Name="MediaControlsPanel" Orientation="Horizontal" HorizontalAlignment="Center" Visibility="Collapsed" Margin="0,0,0,6">
                             <Button Content="⏮" Style="{StaticResource ActionButtonStyle}" Click="OnPrevClick" ToolTip="Previous Track"/>
@@ -462,14 +467,60 @@
                             </Grid>
                         </Border>
 
-                        <!-- The Hub Settings Launcher Button -->
-                        <Button x:Name="BtnOpenTheHubDashboard" Style="{StaticResource QuickPillButtonStyle}" Margin="0,6,0,0" Padding="0,5" Click="OnOpenTheHubClick" ToolTip="Open The Hub Settings &amp; Customization">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="⚡ The Hub" FontWeight="SemiBold" FontSize="11.5" Foreground="#60A5FA" Margin="0,0,6,0"/>
-                                <TextBlock Text="• Open Settings" FontSize="11" Foreground="#A1A1AA"/>
+                        <!-- ── Workspaces Quick Launcher Trigger ─────────────────────── -->
+                        <Border x:Name="WorkspaceTriggerRow"
+                                Margin="0,5,0,0" Padding="0,4,0,0"
+                                BorderThickness="0,1,0,0" BorderBrush="#1A1A24">
+                            <Button x:Name="BtnWorkspaceTrigger"
+                                    Style="{StaticResource QuickPillButtonStyle}"
+                                    Click="OnWorkspaceTriggerClick"
+                                    ToolTip="Quick-launch a Workspace">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="📁" FontSize="10.5" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Workspaces" FontSize="10.5" FontWeight="SemiBold"
+                                               Foreground="#A1A1AA" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtWorkspaceChevron" Text=" ▾" FontSize="9"
+                                               Foreground="#71717A" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+
+                        <!-- ── Workspaces Popover (hidden by default, ZIndex=100 prevents clipping) ─────────────────── -->
+                        <Border x:Name="WorkspacePopover"
+                                Panel.ZIndex="100"
+                                Visibility="Collapsed"
+                                Background="#0D0D12"
+                                BorderBrush="#252530"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,4,0,0"
+                                Padding="6,8">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4"
+                                                  Color="#000000" Opacity="0.7"/>
+                            </Border.Effect>
+                            <StackPanel>
+                                <!-- Popover Header -->
+                                <Grid Margin="4,0,4,6">
+                                    <TextBlock Text="WORKSPACES" FontSize="9" FontWeight="Bold"
+                                               Foreground="#52525B" VerticalAlignment="Center"/>
+                                    <Button Content="✕" Style="{StaticResource ActionButtonStyle}"
+                                            FontSize="9" Width="18" Height="18"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            Click="OnCloseWorkspacePopoverClick"
+                                            ToolTip="Close workspace launcher"/>
+                                </Grid>
+                                <Separator Background="#1E1E28" Margin="2,0,2,4" Height="1"/>
+                                <!-- Workspace Items -->
+                                <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel x:Name="WorkspacePopoverList" Margin="0,1"/>
+                                </ScrollViewer>
                             </StackPanel>
-                        </Button>
+                        </Border>
+
                     </StackPanel>
+
                 </Grid>
             </Grid>
         </Border>

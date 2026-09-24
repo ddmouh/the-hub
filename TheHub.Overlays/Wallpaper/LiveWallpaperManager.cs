@@ -7,6 +7,8 @@ using TheHub.Common.Config;
 using TheHub.Core.Native;
 using TheHub.Core.Services;
 
+using WallpaperPlayerWindow = TheHub.Overlays.Wallpaper.LiveWallpaperWindow;
+
 namespace TheHub.Overlays.Wallpaper;
 
 /// <summary>
@@ -15,7 +17,8 @@ namespace TheHub.Overlays.Wallpaper;
 /// </summary>
 public class WallpaperManager : IDisposable
 {
-    private readonly Dictionary<string, LiveWallpaperWindow> _activeWallpapers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, WallpaperPlayerWindow> _activePlayers = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, WallpaperPlayerWindow> _activeWallpapers => _activePlayers;
     private bool _isMuted = true;
     private double _volume = 0.0;
     private string _currentFitMode = "Fill";
@@ -328,7 +331,7 @@ public class WallpaperManager : IDisposable
 
     /// <summary>
     /// Applies an independent live wallpaper to a single specific screen (Individual mode).
-    /// Closes active wallpaper windows on other screens and refreshes the desktop to clear inactive displays.
+    /// Only the previous player assigned to that display target is terminated; other monitors keep playing.
     /// </summary>
     public void PlayVideoOnMonitor(string deviceName, string filePath, bool isMuted = true, double volume = 0.0)
     {
@@ -366,25 +369,25 @@ public class WallpaperManager : IDisposable
 
         string targetDevice = targetMonitor.DeviceName;
 
-        // 1. Close windows on all OTHER screens
-        var keysToRemove = _activeWallpapers.Keys.Where(k => !string.Equals(k, targetDevice, StringComparison.OrdinalIgnoreCase)).ToList();
-        foreach (var key in keysToRemove)
-        {
-            if (_activeWallpapers.TryGetValue(key, out var win))
-            {
-                try { win.TeardownAndDestroy(); } catch { }
-                _activeWallpapers.Remove(key);
-            }
-        }
-
-        // 2. If target screen already has an active instance, stop and destroy it first
-        if (_activeWallpapers.TryGetValue(targetDevice, out var existing))
+        // 1. Terminate and dispose only the previous wallpaper player assigned to that specific display target. Do not affect other monitors.
+        if (_activePlayers.TryGetValue(targetDevice, out var existing))
         {
             try { existing.TeardownAndDestroy(); } catch { }
-            _activeWallpapers.Remove(targetDevice);
+            _activePlayers.Remove(targetDevice);
         }
 
-        // 3. Create independent window for the target screen with exact physical bounds
+        // Remove stale "ALL" mapping if individual assignment is being set (preserve independent per-display mode)
+        if (_activePlayers.ContainsKey("ALL"))
+        {
+            if (_activePlayers.TryGetValue("ALL", out var allWin))
+            {
+                try { allWin.TeardownAndDestroy(); } catch { }
+            }
+            _activePlayers.Remove("ALL");
+        }
+
+        // 2. Retrieve specific display bounds and create/position the new player window solely over that screen behind the desktop icons (WorkerW)
+        // 3. Register the new instance into the dictionary for that display key
         try
         {
             var win = new LiveWallpaperWindow(targetMonitor);
@@ -392,22 +395,19 @@ public class WallpaperManager : IDisposable
             win.SetBatteryPaused(_isBatteryOffline && SettingsManager.Current.WallpaperPauseOnBattery);
             win.MediaPlaybackFailed += (dev, err) =>
             {
-                _activeWallpapers.Remove(dev);
+                _activePlayers.Remove(dev);
                 WallpaperPlaybackFailed?.Invoke(dev, err);
             };
             win.Show();
             win.PlayVideo(absolutePath, isMuted, volume);
-            _activeWallpapers[targetDevice] = win;
+            _activePlayers[targetDevice] = win;
 
-            AppLogger.Log($"WallpaperManager: Created individual wallpaper window for '{targetDevice}' [{targetMonitor.Width}x{targetMonitor.Height} at ({targetMonitor.Bounds.Left},{targetMonitor.Bounds.Top})] FitMode: {_currentFitMode}");
+            AppLogger.Log($"WallpaperManager: Created independent wallpaper window for '{targetDevice}' [{targetMonitor.Width}x{targetMonitor.Height} at ({targetMonitor.Bounds.Left},{targetMonitor.Bounds.Top})] FitMode: {_currentFitMode}");
         }
         catch (Exception ex)
         {
             AppLogger.Log($"WallpaperManager error creating individual window for {targetDevice}: {ex.Message}");
         }
-
-        // 4. Refresh desktop wallpaper so inactive displays immediately clear any video remnants
-        DesktopWorkerHelper.RefreshDesktopWallpaper();
 
         TriggerMemoryTrimPostPlayback();
     }

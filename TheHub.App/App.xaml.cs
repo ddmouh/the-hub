@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using TheHub.Common.Config;
@@ -55,7 +56,7 @@ public partial class App : System.Windows.Application
             }
         }
 
-        AppLogger.Log("App.OnStartup started");
+        AppLogger.Log($"App.OnStartup started args=[{string.Join(",", e.Args)}]");
 
         AppDomain.CurrentDomain.UnhandledException += (s, args) =>
         {
@@ -83,9 +84,40 @@ public partial class App : System.Windows.Application
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         var win = new MainWindow();
         MainWindow = win;
-        win.Show();
-        win.Activate();
-        AppLogger.Log("App.OnStartup win.Show() completed successfully");
+
+        // Determine if this is a silent autostart (Windows OS boot) - only hide if explicitly requested
+        bool isAutostart = e.Args.Any(arg =>
+            arg.Equals("--autostart", StringComparison.OrdinalIgnoreCase) ||
+            arg.Equals("--minimized", StringComparison.OrdinalIgnoreCase) ||
+            arg.Equals("--start-minimized", StringComparison.OrdinalIgnoreCase) ||
+            arg.Equals("/autostart", StringComparison.OrdinalIgnoreCase) ||
+            arg.Equals("-autostart", StringComparison.OrdinalIgnoreCase) ||
+            arg.Equals("-minimized", StringComparison.OrdinalIgnoreCase));
+
+        // Fallback: support values like --autostart=true or any arg containing the keyword
+        if (!isAutostart)
+        {
+            isAutostart = e.Args.Any(arg =>
+                arg.IndexOf("autostart", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                arg.IndexOf("minimized", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        if (isAutostart)
+        {
+            AppLogger.Log("App.OnStartup autostart detected - starting minimized to tray (Dashboard hidden)");
+            // Initialize window but keep hidden; tray icon remains active and user can open via tray
+            // Ensure window is not visible on autostart
+            win.Hide();
+        }
+        else
+        {
+            // Normal manual launch via desktop .exe shortcut - explicitly show Dashboard in foreground
+            win.Show();
+            win.WindowState = WindowState.Normal;
+            win.Activate();
+            win.Focus();
+            AppLogger.Log("App.OnStartup win.Show() completed successfully - Dashboard shown in foreground");
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

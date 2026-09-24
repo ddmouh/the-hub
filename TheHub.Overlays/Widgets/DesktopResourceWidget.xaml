@@ -1,0 +1,146 @@
+<widgets:DesktopWidgetBase x:Class="TheHub.Overlays.Widgets.DesktopResourceWidget"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:widgets="clr-namespace:TheHub.Overlays.Widgets"
+        Title="Desktop System Monitor Widget"
+        Width="320" Height="220"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="False"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <Style x:Key="WidgetToolButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#71717A"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#27272A"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Custom Smooth Progress Bar Style -->
+        <Style x:Key="ResourceProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="Background" Value="#1F1F24"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3">
+                            <Grid x:Name="PART_Track">
+                                <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="3" HorizontalAlignment="Left"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Outer Widget Card with Dark Studio Border -->
+    <Border x:Name="MainBorder" Margin="8" CornerRadius="12" Background="#141419" BorderBrush="#252A33" BorderThickness="1.5">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.6"/>
+        </Border.Effect>
+
+        <Grid Margin="12,8,12,10">
+            <Grid.RowDefinitions>
+                <!-- Top Toolbar -->
+                <RowDefinition Height="22"/>
+                <!-- CPU Metrics Row -->
+                <RowDefinition Height="Auto"/>
+                <!-- RAM Metrics Row -->
+                <RowDefinition Height="Auto"/>
+                <!-- GPU Metrics Row -->
+                <RowDefinition Height="Auto"/>
+                <!-- Bottom Uptime / Status Line -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Row 0: Header / Tool Row -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Drag Handle & Label -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⋮⋮ " FontSize="12" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center" Cursor="SizeAll" ToolTip="Click and drag to reposition"/>
+                    <TextBlock Text="HARDWARE TELEMETRY" FontSize="9.5" FontWeight="Bold" Foreground="#71717A" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Quick Action Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnPin" Content="📌" Style="{StaticResource WidgetToolButton}" Click="OnPinClick" ToolTip="Toggle Always-on-Top" Margin="0,0,2,0"/>
+                    <Button Content="✕" Style="{StaticResource WidgetToolButton}" Click="OnCloseClick" ToolTip="Close Widget"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Row 1: CPU Metrics -->
+            <StackPanel Grid.Row="1" Margin="0,8,0,8">
+                <Grid Margin="0,0,0,3">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚡ CPU LOAD" FontSize="10" FontWeight="SemiBold" Foreground="#93C5FD"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtCpuPercent" Text="0%" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                </Grid>
+                <ProgressBar x:Name="PbCpu" Value="0" Maximum="100" Style="{StaticResource ResourceProgressBarStyle}" Foreground="#3B82F6"/>
+            </StackPanel>
+
+            <!-- Row 2: RAM Metrics -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,8">
+                <Grid Margin="0,0,0,3">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🎛️ MEMORY (RAM)" FontSize="10" FontWeight="SemiBold" Foreground="#A7F3D0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock x:Name="TxtRamText" Text="0.0 / 0.0 GB" FontSize="9.5" Foreground="#71717A" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtRamPercent" Text="0%" FontSize="11" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+                <ProgressBar x:Name="PbRam" Value="0" Maximum="100" Style="{StaticResource ResourceProgressBarStyle}" Foreground="#10B981"/>
+            </StackPanel>
+
+            <!-- Row 3: GPU Metrics -->
+            <StackPanel Grid.Row="3" Margin="0,0,0,8">
+                <Grid Margin="0,0,0,3">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🎮 GPU COMPUTE" FontSize="10" FontWeight="SemiBold" Foreground="#DDD6FE"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtGpuPercent" Text="0%" FontSize="11" FontWeight="Bold" Foreground="#BD00FF" HorizontalAlignment="Right"/>
+                </Grid>
+                <ProgressBar x:Name="PbGpu" Value="0" Maximum="100" Style="{StaticResource ResourceProgressBarStyle}" Foreground="#BD00FF"/>
+            </StackPanel>
+
+            <!-- Row 4: Uptime & Health Line -->
+            <Grid Grid.Row="4" Margin="0,2,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TxtUptime" Grid.Column="0" Text="UPTIME: CALCULATING..." FontSize="9.5" FontWeight="SemiBold" Foreground="#71717A" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="HEALTHY" FontSize="9" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Border>
+</widgets:DesktopWidgetBase>

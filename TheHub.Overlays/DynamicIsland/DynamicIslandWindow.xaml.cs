@@ -1,10 +1,11 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.Runtime.InteropServices;
 using TheHub.Common.Config;
 using TheHub.Common.Models;
 using TheHub.Core.Monitors;
@@ -15,6 +16,9 @@ namespace TheHub.Overlays.DynamicIsland;
 
 public partial class DynamicIslandWindow : Window
 {
+    private const int DWMWA_BORDER_COLOR = 34;
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
     private readonly DispatcherTimer _collapseTimer;
     private DynamicIslandEvent? _currentEvent;
     private bool _isMouseOver;
@@ -71,6 +75,10 @@ public partial class DynamicIslandWindow : Window
     {
         base.OnSourceInitialized(e);
         var hwnd = new WindowInteropHelper(this).Handle;
+
+        // The island draws its own rounded border; prevent DWM from adding a white frame.
+        int noBorder = unchecked((int)0xFFFFFFFE);
+        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref noBorder, sizeof(int));
 
         int exStyle = Win32Api.GetWindowLong(hwnd, Win32Api.GWL_EXSTYLE);
         Win32Api.SetWindowLong(hwnd, Win32Api.GWL_EXSTYLE,
@@ -753,6 +761,16 @@ public partial class DynamicIslandWindow : Window
 
     private void OnMouseEnter(object sender, MouseEventArgs e)
     {
+        // Guard: only expand if cursor is genuinely over the island pill.
+        // With AllowsTransparency=True, WPF can fire MouseEnter on the Border
+        // even when the cursor is near the transparent window boundary while
+        // the user scrolls web pages or videos in background applications.
+        var pos = e.GetPosition(IslandContainer);
+        if (pos.X < -4 || pos.Y < -4 ||
+            pos.X > IslandContainer.ActualWidth + 4 ||
+            pos.Y > IslandContainer.ActualHeight + 4)
+            return;
+
         _isMouseOver = true;
         Expand();
     }
@@ -969,6 +987,170 @@ public partial class DynamicIslandWindow : Window
         if (PrevRequested != null)
         {
             await PrevRequested.Invoke();
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  WORKSPACES QUICK LAUNCHER
+    // ══════════════════════════════════════════════════════════════════════════
+
+    private List<WorkspaceConfig> _workspaces = new();
+    private bool _workspacePopoverOpen = false;
+
+    /// <summary>
+    /// Called by MainWindow whenever the workspace list changes.
+    /// Rebuilds the popover rows and shows/hides the trigger row accordingly.
+    /// </summary>
+    public void SetWorkspaces(IEnumerable<WorkspaceConfig> workspaces)
+    {
+        _workspaces = workspaces?.ToList() ?? new List<WorkspaceConfig>();
+        Dispatcher.BeginInvoke(() =>
+        {
+            BuildWorkspacePopoverItems();
+            // Hide trigger row when no workspaces are configured
+            if (WorkspaceTriggerRow != null)
+                WorkspaceTriggerRow.Visibility = _workspaces.Count > 0
+                    ? Visibility.Visible : Visibility.Collapsed;
+        });
+    }
+
+
+    private void BuildWorkspacePopoverItems()
+    {
+        if (WorkspacePopoverList == null) return;
+        WorkspacePopoverList.Children.Clear();
+
+        foreach (var ws in _workspaces)
+        {
+            // Row border
+            var row = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x14, 0x14, 0x1A)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(0x22, 0x22, 0x2E)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(8, 5, 8, 5),
+                Margin = new Thickness(0, 0, 0, 4),
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Accent color indicator dot
+            var dot = new System.Windows.Shapes.Ellipse
+            {
+                Width = 8, Height = 8,
+                Margin = new Thickness(0, 0, 7, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            try
+            {
+                var dotColor = (Color)ColorConverter.ConvertFromString(ws.AccentColor ?? "#3B82F6");
+                dot.Fill = new SolidColorBrush(dotColor);
+            }
+            catch
+            {
+                dot.Fill = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+            }
+            Grid.SetColumn(dot, 0);
+
+            // Workspace name
+            var nameBlock = new TextBlock
+            {
+                Text = $"{ws.IconGlyph} {ws.Name}",
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Color.FromRgb(0xD4, 0xD4, 0xD8)),
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            Grid.SetColumn(nameBlock, 1);
+
+            // ▶ Run button
+            var runBtn = new Button
+            {
+                Content = "▶ Run",
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Color.FromRgb(0x60, 0xA5, 0xFA)),
+                Background = new SolidColorBrush(Color.FromRgb(0x1A, 0x1A, 0x2A)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 3, 8, 3),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Tag = ws
+            };
+            runBtn.Click += OnWorkspaceRunClick;
+            Grid.SetColumn(runBtn, 2);
+
+            grid.Children.Add(dot);
+            grid.Children.Add(nameBlock);
+            grid.Children.Add(runBtn);
+            row.Child = grid;
+            WorkspacePopoverList.Children.Add(row);
+        }
+
+        // Empty state
+        if (_workspaces.Count == 0)
+        {
+            WorkspacePopoverList.Children.Add(new TextBlock
+            {
+                Text = "No workspaces configured yet.",
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Color.FromRgb(0x71, 0x71, 0x7A)),
+                Margin = new Thickness(4, 4, 4, 4)
+            });
+        }
+    }
+
+    private void OnWorkspaceTriggerClick(object sender, RoutedEventArgs e)
+    {
+        _workspacePopoverOpen = !_workspacePopoverOpen;
+        WorkspacePopover.Visibility = _workspacePopoverOpen ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_workspacePopoverOpen)
+        {
+            // Animate fade-in
+            var anim = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150));
+            WorkspacePopover.BeginAnimation(UIElement.OpacityProperty, anim);
+            TxtWorkspaceChevron.Text = " ▴";
+
+            // Grow island height so the popover list is fully visible
+            int wsCount = Math.Max(1, _workspaces.Count);
+            double popoverH = 36 + Math.Min(wsCount, 6) * 36.0;
+            double curWp = IslandContainer.ActualWidth > 0 ? IslandContainer.ActualWidth : 410;
+            double curHp = IslandContainer.ActualHeight > 0 ? IslandContainer.ActualHeight : GetExpandedTargetHeight();
+            AnimateContainer(curWp, curWp, curHp, curHp + popoverH, 16, 16);
+        }
+        else
+        {
+            TxtWorkspaceChevron.Text = " ▾";
+            // Shrink back to normal expanded height
+            double curWc = IslandContainer.ActualWidth > 0 ? IslandContainer.ActualWidth : 410;
+            double curHc = IslandContainer.ActualHeight > 0 ? IslandContainer.ActualHeight : GetExpandedTargetHeight();
+            AnimateContainer(curWc, curWc, curHc, GetExpandedTargetHeight(), 16, 16);
+        }
+    }
+
+    private void OnCloseWorkspacePopoverClick(object sender, RoutedEventArgs e)
+    {
+        _workspacePopoverOpen = false;
+        WorkspacePopover.Visibility = Visibility.Collapsed;
+        TxtWorkspaceChevron.Text = " ▾";
+    }
+
+    private void OnWorkspaceRunClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is WorkspaceConfig workspace)
+        {
+            // Close the popover immediately for clean UX
+            OnCloseWorkspacePopoverClick(sender, e);
+
+            // Fire workspace application launch off the UI thread
+            Task.Run(async () => await AppLauncherService.ApplyWorkspaceAsync(workspace));
         }
     }
 }

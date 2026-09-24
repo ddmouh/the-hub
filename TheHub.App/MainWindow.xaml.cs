@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
@@ -15,6 +16,7 @@ using TheHub.Core.Services;
 using TheHub.Overlays.DynamicIsland;
 using TheHub.Overlays.RadialLauncher;
 using TheHub.Overlays.Wallpaper;
+using TheHub.Overlays.Widgets;
 using Button = System.Windows.Controls.Button;
 using RadioButton = System.Windows.Controls.RadioButton;
 
@@ -22,10 +24,40 @@ namespace TheHub.App;
 
 public partial class MainWindow : Window
 {
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    private const int DWMWA_BORDER_COLOR = 34;
+    private const int DWMWA_CAPTION_COLOR = 35;
+    private const int DWMWA_TEXT_COLOR = 36;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+    private void ApplyDarkWindowChrome()
+    {
+        try
+        {
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero) return;
+            int dark = 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref dark, sizeof(int));
+            int borderColor = 0x00121212; // #121212 in COLORREF (0x00BBGGRR)
+            DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+            int captionColor = 0x00121212;
+            DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref captionColor, sizeof(int));
+        }
+        catch { }
+    }
+
     private readonly CoreHubManager _core;
     private readonly RadialWindow _radialWindow;
     private readonly DynamicIslandWindow _islandWindow;
     private readonly WallpaperManager _wallpaperManager;
+    private DesktopClockWidget? _clockWidget;
+    // Split hardware widgets (Section 2.3) — independent windows, same DesktopWidgetBase pattern as clock
+    private DesktopCpuWidget? _cpuWidget;
+    private DesktopGpuWidget? _gpuWidget;
+    private DesktopRamWidget? _ramWidget;
+    private OverviewViewModel _overviewViewModel;
     private string _selectedMonitorTarget = "ALL";
     public WallpaperManager WallpaperManager => _wallpaperManager;
     private readonly DispatcherTimer _ramTimer;
@@ -243,7 +275,25 @@ public partial class MainWindow : Window
         _ramTimer.Tick += (s, e) => UpdateMemoryMetrics();
         _ramTimer.Start();
 
-        Loaded += OnLoaded;
+        // Overview Widgets ViewModel Wiring (Modular Cards Architecture)
+        _overviewViewModel = new OverviewViewModel(
+            setClockActive: SetClockWidgetState,
+            setClockLocked: SetClockWidgetLocked,
+            widgetConfigChanged: OnWidgetConfigChanged,
+            setGaugesActive: SetResourceWidgetState,
+            setGaugesLocked: SetResourceWidgetLocked,
+            setCpuActive: SetCpuWidgetState,
+            setGpuActive: SetGpuWidgetState,
+            setRamActive: SetRamWidgetState
+        );
+            OverviewWidgetsControl.DataContext = _overviewViewModel;
+
+            // Restore each hardware widget independently.
+            SetCpuWidgetState(_overviewViewModel.IsCpuActive);
+            SetGpuWidgetState(_overviewViewModel.IsGpuActive);
+            SetRamWidgetState(_overviewViewModel.IsRamActive);
+
+            Loaded += OnLoaded;
         AppLogger.Log("MainWindow.ctor finished");
     }
 
@@ -255,7 +305,18 @@ public partial class MainWindow : Window
             // Bind UI data
             var settings = SettingsManager.Current;
             WorkspacesListControl.ItemsSource = settings.Workspaces;
-            PermissionsListControl.ItemsSource = settings.AIPermissions;
+            // PermissionsListControl removed — AI Permissions section no longer shown in Options tab.
+
+            // Options page: custom fonts list + island typography follow the active font
+            RefreshFontsList();
+            if (_overviewViewModel?.Config != null)
+            {
+                ApplyDynamicIslandFont(_overviewViewModel.Config);
+            }
+            if (!string.IsNullOrWhiteSpace(settings.GlobalFontFamily))
+            {
+                FontFamily = CustomFontService.ResolveFontFamily(settings.GlobalFontFamily);
+            }
 
             // Bind Radial Wheel Studio Settings
             RefreshWorkspacesCards();
@@ -308,12 +369,14 @@ public partial class MainWindow : Window
             ChkVolume.IsChecked = settings.IslandShowVolume;
             ChkClipboard.IsChecked = settings.IslandShowClipboard;
             ChkUsb.IsChecked = settings.IslandShowUsb;
-            ChkHideOnFullscreen.IsChecked = settings.IslandHideOnFullscreen;
+            // ChkHideOnFullscreen removed from XAML — IslandHideOnFullscreen defaults to true
             ChkAlwaysShowFullscreen.IsChecked = settings.IslandAlwaysShowOnFullscreen;
             ChkLockPosition.IsChecked = settings.IslandLockPosition;
             ChkShowQuickControls.IsChecked = settings.IslandShowHoverQuickControls;
             ChkShowMicMute.IsChecked = settings.IslandShowMicMute;
             ChkShowBrightness.IsChecked = settings.IslandShowBrightnessControl;
+            CmbDynamicIslandFont.ItemsSource = _overviewViewModel.AvailableFontFamilies;
+            CmbDynamicIslandFont.SelectedItem = _overviewViewModel.SelectedDynamicIslandFontFamily;
 
             SldIslandScale.Value = settings.IslandScale;
             TxtScaleValue.Text = $"{(int)Math.Round(settings.IslandScale * 100)}%";
@@ -331,6 +394,11 @@ public partial class MainWindow : Window
             ChkPauseWallpaperBattery.IsChecked = settings.WallpaperPauseOnBattery;
             ChkMuteWallpaperAudio.IsChecked = settings.WallpaperMuted;
 
+            // Sync Options tab mirrors
+            if (ChkOptPauseFullscreen != null) ChkOptPauseFullscreen.IsChecked = settings.WallpaperPauseOnFullscreen;
+            if (ChkOptPauseBattery != null) ChkOptPauseBattery.IsChecked = settings.WallpaperPauseOnBattery;
+            if (ChkOptMuteAudio != null) ChkOptMuteAudio.IsChecked = settings.WallpaperMuted;
+
             string currentFit = settings.WallpaperFitMode ?? "Fill";
             foreach (ComboBoxItem item in CmbWallpaperFit.Items)
             {
@@ -345,12 +413,15 @@ public partial class MainWindow : Window
             PopulateMonitorSelectorUI();
             RefreshWallpapersGallery();
             RestoreActiveWallpapers();
+            SetClockWidgetState(_overviewViewModel.IsClockActive);
 
             _core.AmbientStatusChanged += status => _islandWindow.SetAmbientStatus(status);
 
             AppLogger.Log("Showing Dynamic Island window");
             _islandWindow.PositionWindow();
             _islandWindow.Show();
+            // Populate the Workspaces Quick Launcher with the current workspace list
+            _islandWindow.SetWorkspaces(SettingsManager.Current.Workspaces);
 
             AppLogger.Log("Starting Core Hub Manager");
             await _core.StartAsync();
@@ -435,7 +506,7 @@ public partial class MainWindow : Window
     private void OnNavChecked(object sender, RoutedEventArgs e)
     {
         if (PageOverview == null || PageWorkspaces == null || PageRadial == null || 
-            PageIsland == null || PageAi == null || PagePermissions == null) return;
+            PageIsland == null || PageAi == null || PageOptions == null) return;
 
         if (sender is RadioButton rb && rb.Tag is string tagStr && int.TryParse(tagStr, out int index))
         {
@@ -444,7 +515,7 @@ public partial class MainWindow : Window
             PageRadial.Visibility = (index == 2) ? Visibility.Visible : Visibility.Collapsed;
             PageIsland.Visibility = (index == 3) ? Visibility.Visible : Visibility.Collapsed;
             PageAi.Visibility = (index == 4) ? Visibility.Visible : Visibility.Collapsed;
-            PagePermissions.Visibility = (index == 5) ? Visibility.Visible : Visibility.Collapsed;
+            PageOptions.Visibility = (index == 5) ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -1005,14 +1076,16 @@ public partial class MainWindow : Window
             }
             else
             {
-                // Individual screen mode
-                settings.MonitorWallpapers.Clear();
+                // Individual screen mode - per-display independent assignment
+                // Remove stale "ALL" duplicate mapping if present, preserve other per-display assignments
+                if (settings.MonitorWallpapers.ContainsKey("ALL"))
+                    settings.MonitorWallpapers.Remove("ALL");
                 settings.MonitorWallpapers[_selectedMonitorTarget] = item.Id;
                 settings.ActiveWallpaperId = item.Id;
 
                 foreach (var wp in settings.Wallpapers)
                 {
-                    wp.IsActive = (wp.Id == item.Id);
+                    wp.IsActive = settings.MonitorWallpapers.Values.Contains(wp.Id);
                     wp.NotifyStateChanged();
                 }
 
@@ -1121,38 +1194,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnResetWallpaperClick(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            _wallpaperManager.DisposeWallpapers();
-            var settings = SettingsManager.Current;
-            settings.MonitorWallpapers.Clear();
-            settings.ActiveWallpaperId = null;
-            foreach (var wp in settings.Wallpapers)
-            {
-                wp.IsActive = false;
-                wp.NotifyStateChanged();
-            }
-            SettingsManager.SaveSettings();
-            RefreshWallpapersGallery();
-            PopulateMonitorSelectorUI();
-
-            _core.TriggerIslandEvent(new DynamicIslandEvent
-            {
-                Type = IslandEventType.SystemAlert,
-                Title = "Wallpapers Reset",
-                Subtitle = "Stopped live wallpapers & refreshed desktop",
-                Glyph = "⟲",
-                DisplayDurationMs = 2500
-            });
-        }
-        catch (Exception ex)
-        {
-            AppLogger.Log($"OnResetWallpaperClick error: {ex.Message}");
-        }
-    }
-
     private void OnWallpaperSettingChanged(object sender, RoutedEventArgs e)
     {
         if (ChkPauseWallpaperFullscreen == null || ChkPauseWallpaperBattery == null) return;
@@ -1184,6 +1225,34 @@ public partial class MainWindow : Window
     }
 
     #endregion
+
+    /// <summary>
+    /// Mirrors Options-tab wallpaper checkboxes to actual settings and Wallpapers-tab controls.
+    /// </summary>
+    private void OnOptionsWallpaperSettingChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.CheckBox chk) return;
+        bool isChecked = chk.IsChecked ?? false;
+        string tag = chk.Tag?.ToString() ?? string.Empty;
+        switch (tag)
+        {
+            case "PauseFullscreen":
+                SettingsManager.Current.WallpaperPauseOnFullscreen = isChecked;
+                if (ChkPauseWallpaperFullscreen != null) ChkPauseWallpaperFullscreen.IsChecked = isChecked;
+                break;
+            case "PauseBattery":
+                SettingsManager.Current.WallpaperPauseOnBattery = isChecked;
+                if (ChkPauseWallpaperBattery != null) ChkPauseWallpaperBattery.IsChecked = isChecked;
+                break;
+            case "MuteAudio":
+                SettingsManager.Current.WallpaperMuted = isChecked;
+                if (ChkMuteWallpaperAudio != null) ChkMuteWallpaperAudio.IsChecked = isChecked;
+                _wallpaperManager.SetMuted(isChecked);
+                break;
+        }
+        SettingsManager.SaveSettings();
+        _wallpaperManager.CheckPowerState();
+    }
 
     #region Workspaces & Category Management
 
@@ -1248,6 +1317,9 @@ public partial class MainWindow : Window
         RefreshWorkspacesList();
         OpenWorkspaceDetail(newWs);
 
+        // Keep the Dynamic Island workspace launcher in sync
+        _islandWindow.SetWorkspaces(SettingsManager.Current.Workspaces);
+
         _core.TriggerIslandEvent(new DynamicIslandEvent
         {
             Type = IslandEventType.SystemAlert,
@@ -1257,6 +1329,7 @@ public partial class MainWindow : Window
             DisplayDurationMs = 2500
         });
     }
+
 
     private void OnManageWorkspaceClick(object sender, RoutedEventArgs e)
     {
@@ -1373,6 +1446,8 @@ public partial class MainWindow : Window
                 }
 
                 RefreshWorkspacesList();
+                // Keep the Dynamic Island workspace launcher in sync
+                _islandWindow.SetWorkspaces(SettingsManager.Current.Workspaces);
 
                 _core.TriggerIslandEvent(new DynamicIslandEvent
                 {
@@ -1823,7 +1898,7 @@ public partial class MainWindow : Window
 
     private void OnSettingToggled(object sender, RoutedEventArgs e)
     {
-        if (ChkMedia == null || ChkVolume == null || ChkClipboard == null || ChkUsb == null || ChkHideOnFullscreen == null) return;
+        if (ChkMedia == null || ChkVolume == null || ChkClipboard == null || ChkUsb == null) return;
 
         var settings = SettingsManager.Current;
         settings.IslandShowMedia = ChkMedia?.IsChecked ?? true;
@@ -1831,7 +1906,7 @@ public partial class MainWindow : Window
         settings.IslandShowVolume = ChkVolume?.IsChecked ?? true;
         settings.IslandShowClipboard = ChkClipboard?.IsChecked ?? true;
         settings.IslandShowUsb = ChkUsb?.IsChecked ?? true;
-        settings.IslandHideOnFullscreen = ChkHideOnFullscreen?.IsChecked ?? true;
+        settings.IslandHideOnFullscreen = true; // ChkHideOnFullscreen removed — always hide on fullscreen by default
         settings.IslandAlwaysShowOnFullscreen = ChkAlwaysShowFullscreen?.IsChecked ?? false;
         settings.IslandLockPosition = ChkLockPosition?.IsChecked ?? false;
         settings.IslandShowHoverQuickControls = ChkShowQuickControls?.IsChecked ?? true;
@@ -1917,6 +1992,7 @@ public partial class MainWindow : Window
     {
         AppLogger.Log("MainWindow.OnSourceInitialized");
         base.OnSourceInitialized(e);
+        ApplyDarkWindowChrome();
 
         try
         {
@@ -1998,6 +2074,7 @@ public partial class MainWindow : Window
         try { Hide(); } catch { }
         try { _radialWindow?.Hide(); } catch { }
         try { _islandWindow?.Hide(); } catch { }
+        try { _clockWidget?.Hide(); } catch { }
 
         // 2. Stop timers
         try { _ramTimer?.Stop(); } catch { }
@@ -2009,6 +2086,7 @@ public partial class MainWindow : Window
         // 4. Close windows
         try { _radialWindow?.Close(); } catch { }
         try { _islandWindow?.Close(); } catch { }
+        try { _clockWidget?.Close(); } catch { }
         try { _wallpaperManager?.DisposeWallpapers(); } catch { }
 
         // 5. Unhook keyboard/mouse hooks and close IPC
@@ -2054,19 +2132,343 @@ public partial class MainWindow : Window
         }
     }
 
+    #region Overview Studio Handlers
+
+    private void OnOverviewSubTabChanged(object sender, RoutedEventArgs e)
+    {
+        if (SubPanelOverviewWallpapers == null || SubPanelOverviewWidgets == null ||
+            SubPanelOverviewTaskbar == null) return;
+
+        if (sender is RadioButton rb && rb.Tag is string tagStr && int.TryParse(tagStr, out int tabIndex))
+        {
+            SubPanelOverviewWallpapers.Visibility = (tabIndex == 0) ? Visibility.Visible : Visibility.Collapsed;
+            SubPanelOverviewWidgets.Visibility = (tabIndex == 1) ? Visibility.Visible : Visibility.Collapsed;
+            SubPanelOverviewTaskbar.Visibility = (tabIndex == 2) ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void SetClockWidgetLocked(bool locked)
+    {
+        _clockWidget?.SetLockState(locked, clickThrough: locked);
+    }
+
+    private void OnWidgetConfigChanged(TheHub.Common.Config.WidgetsConfig config)
+    {
+        _clockWidget?.ApplyConfig(config);
+        ApplyDynamicIslandFont(config);
+    }
+
+    private void ApplyDynamicIslandFont(TheHub.Common.Config.WidgetsConfig config)
+    {
+        try
+        {
+            if (_islandWindow != null && config != null && !string.IsNullOrWhiteSpace(config.DynamicIslandFontFamily))
+            {
+                _islandWindow.FontFamily = CustomFontService.ResolveFontFamily(config.DynamicIslandFontFamily);
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"ApplyDynamicIslandFont error: {ex.Message}");
+        }
+    }
+
+    private void ApplyActiveFontToWidgets(TheHub.Common.Config.WidgetsConfig config)
+    {
+        try
+        {
+            _clockWidget?.ApplyConfig(config);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"ApplyActiveFontToWidgets error: {ex.Message}");
+        }
+    }
+
+    #region Options - Custom Fonts Management
+
+    private void RefreshFontsList()
+    {
+        if (FontsListControl == null) return;
+        var fonts = _overviewViewModel?.InstalledCustomFonts;
+        FontsListControl.ItemsSource = null;
+        FontsListControl.ItemsSource = fonts;
+        if (FontsEmptyPrompt != null)
+        {
+            FontsEmptyPrompt.Visibility = (fonts == null || fonts.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void OnInstallFontClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var ofd = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Select Font to Install (.ttf / .otf)",
+                Filter = "Font Files (*.ttf;*.otf)|*.ttf;*.otf|All Files (*.*)|*.*",
+                Multiselect = false
+            };
+
+            if (ofd.ShowDialog() == true)
+            {
+                var installed = _overviewViewModel?.InstallCustomFont(ofd.FileName);
+                RefreshFontsList();
+
+                if (installed != null)
+                {
+                    var settings = SettingsManager.Current;
+                    if (!settings.CustomFonts.Contains(installed.FileName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        settings.CustomFonts.Add(installed.FileName);
+                        SettingsManager.SaveSettings(settings);
+                    }
+                    _core.TriggerIslandEvent(new DynamicIslandEvent
+                    {
+                        Type = IslandEventType.SystemAlert,
+                        Title = "Font Installed",
+                        Subtitle = $"{installed.FamilyName} is now available for widgets",
+                        Glyph = "🔤",
+                        DisplayDurationMs = 2500
+                    });
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(
+                        "Could not install the selected font. Please choose a valid .ttf or .otf file.",
+                        "The Hub - Font Installation",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"OnInstallFontClick error: {ex.Message}");
+        }
+    }
+
+    private void OnDeleteFontClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string fileName)
+        {
+            var confirm = System.Windows.MessageBox.Show(
+                $"Are you sure you want to delete the installed font '{fileName}'?",
+                "Delete Font",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirm == MessageBoxResult.Yes)
+            {
+                _overviewViewModel?.DeleteCustomFont(fileName);
+                SettingsManager.Current.CustomFonts.RemoveAll(f => string.Equals(f, fileName, StringComparison.OrdinalIgnoreCase));
+                SettingsManager.SaveSettings();
+                RefreshFontsList();
+
+                _core.TriggerIslandEvent(new DynamicIslandEvent
+                {
+                    Type = IslandEventType.SystemAlert,
+                    Title = "Font Removed",
+                    Subtitle = fileName,
+                    Glyph = "🗑️",
+                    DisplayDurationMs = 2000
+                });
+            }
+        }
+    }
+
+    // Stub — the global "Use" font button has been removed.
+    // Fonts are now applied per-widget via the widget's own FontFamily ComboBox
+    // (OverviewView.xaml → Clock Font / Dynamic Island Font dropdowns).
+    private void OnUseFontClick(object sender, RoutedEventArgs e) { /* no-op */ }
+
+    /// <summary>
+    /// Updates the Hub MainWindow font family immediately when the user selects
+    /// a new entry in Options -> Dashboard Font.
+    /// </summary>
+    private void OnDashboardFontChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.ComboBox cmb) return;
+        if (cmb.SelectedItem is not System.Windows.Controls.ComboBoxItem item) return;
+        string fontName = item.Tag?.ToString() ?? "Segoe UI";
+        try
+        {
+            FontFamily = new System.Windows.Media.FontFamily(fontName);
+            AppLogger.Log($"[Options] Dashboard font changed to: {fontName}");
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"[Options] OnDashboardFontChanged error: {ex.Message}");
+        }
+    }
+
+
+    #endregion
+
+    private void SetResourceWidgetLocked(bool locked)
+    {
+        _cpuWidget?.SetLockState(locked, clickThrough: false);
+        _gpuWidget?.SetLockState(locked, clickThrough: false);
+        _ramWidget?.SetLockState(locked, clickThrough: false);
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+    private void OnTitleBarMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            try
+            {
+                ReleaseCapture();
+                var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                if (handle != IntPtr.Zero)
+                {
+                    SendMessage(handle, 0xA1 /* WM_NCLBUTTONDOWN */, 2 /* HTCAPTION */, 0);
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void SetClockWidgetState(bool show)
+    {
+        try
+        {
+            if (show)
+            {
+                if (_clockWidget == null)
+                {
+                    _clockWidget = new DesktopClockWidget();
+                    _clockWidget.Owner = null;
+                    _clockWidget.PositionChanged += OnClockWidgetPositionChanged;
+                    _clockWidget.WidgetClosed += (s, ev) =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            if (_overviewViewModel != null)
+                                _overviewViewModel.IsClockActive = false;
+                        });
+                    };
+                }
+                _clockWidget.Owner = null;
+                if (_overviewViewModel?.Config != null)
+                {
+                    _clockWidget.ApplyConfig(_overviewViewModel.Config);
+                }
+                _clockWidget.SetLockState(_overviewViewModel?.IsClockLocked ?? false, clickThrough: _overviewViewModel?.IsClockLocked ?? false);
+                _clockWidget.Show();
+                _clockWidget.Activate();
+            }
+            else
+            {
+                _clockWidget?.Hide();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"SetClockWidgetState error: {ex.Message}");
+        }
+    }
+
+    private void OnClockWidgetPositionChanged(object? sender, EventArgs e)
+    {
+        if (_clockWidget == null || _overviewViewModel?.Config == null) return;
+        _overviewViewModel.Config.ClockLeft = _clockWidget.Left;
+        _overviewViewModel.Config.ClockTop = _clockWidget.Top;
+        _overviewViewModel.Config.Save();
+    }
+
+    private void OnDynamicIslandFontChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbDynamicIslandFont?.SelectedItem is string family && _overviewViewModel != null)
+        {
+            _overviewViewModel.SelectedDynamicIslandFontFamily = family;
+        }
+    }
+
+    private void SetResourceWidgetState(bool show)
+    {
+        try
+        {
+            if (show)
+            {
+                EnsureSplitWidgets();
+                SetCpuWidgetState(true);
+                SetGpuWidgetState(true);
+                SetRamWidgetState(true);
+            }
+            else
+            {
+                _cpuWidget?.Hide();
+                _gpuWidget?.Hide();
+                _ramWidget?.Hide();
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"SetResourceWidgetState error: {ex.Message}");
+        }
+    }
+
+    private void SetCpuWidgetState(bool show)
+    {
+        EnsureSplitWidgets();
+        if (show) { _cpuWidget!.SetLockState(_overviewViewModel?.IsGaugesLocked ?? false, false); _cpuWidget.Show(); }
+        else _cpuWidget?.Hide();
+    }
+
+    private void SetGpuWidgetState(bool show)
+    {
+        EnsureSplitWidgets();
+        if (show) { _gpuWidget!.SetLockState(_overviewViewModel?.IsGaugesLocked ?? false, false); _gpuWidget.Show(); }
+        else _gpuWidget?.Hide();
+    }
+
+    private void SetRamWidgetState(bool show)
+    {
+        EnsureSplitWidgets();
+        if (show) { _ramWidget!.SetLockState(_overviewViewModel?.IsGaugesLocked ?? false, false); _ramWidget.Show(); }
+        else _ramWidget?.Hide();
+    }
+
+    private void EnsureSplitWidgets()
+    {
+        if (_cpuWidget == null)
+        {
+            _cpuWidget = new DesktopCpuWidget();
+            _cpuWidget.WidgetClosed += (s, ev) => Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+        }
+        if (_gpuWidget == null)
+        {
+            _gpuWidget = new DesktopGpuWidget();
+            _gpuWidget.WidgetClosed += (s, ev) => Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+        }
+        if (_ramWidget == null)
+        {
+            _ramWidget = new DesktopRamWidget();
+            _ramWidget.WidgetClosed += (s, ev) => Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+        }
+    }
+
+    #endregion
+
     #region Radial Wheel Studio Handlers
 
     private void OnRadialSubTabChanged(object sender, RoutedEventArgs e)
     {
-        if (SubPanelActivation == null || SubPanelAppearance == null || 
-            SubPanelWorkspaces == null || SubPanelAdvanced == null) return;
+        if (SubPanelActivation == null || SubPanelAppearance == null ||
+            SubPanelWorkspaces == null) return;
 
         if (sender is RadioButton rb && rb.Tag is string tagStr && int.TryParse(tagStr, out int tabIndex))
         {
-            SubPanelActivation.Visibility = (tabIndex == 0) ? Visibility.Visible : Visibility.Collapsed;
-            SubPanelAppearance.Visibility = (tabIndex == 1) ? Visibility.Visible : Visibility.Collapsed;
-            SubPanelWorkspaces.Visibility = (tabIndex == 2) ? Visibility.Visible : Visibility.Collapsed;
-            SubPanelAdvanced.Visibility = (tabIndex == 3) ? Visibility.Visible : Visibility.Collapsed;
+            SubPanelActivation.Visibility  = (tabIndex == 0) ? Visibility.Visible : Visibility.Collapsed;
+            SubPanelAppearance.Visibility  = (tabIndex == 1) ? Visibility.Visible : Visibility.Collapsed;
+            SubPanelWorkspaces.Visibility  = (tabIndex == 2) ? Visibility.Visible : Visibility.Collapsed;
 
             if (tabIndex == 2)
             {
@@ -2101,18 +2503,27 @@ public partial class MainWindow : Window
             settings.WheelOpacity = (int)SldWheelOpacity.Value;
             settings.BackgroundDimming = (int)SldBackgroundDimming.Value;
 
-            settings.PerformanceMode = ChkPrecisionMode.IsChecked ?? false;
-            settings.FullscreenProtection = ChkFullscreenProtection.IsChecked ?? true;
+            settings.PerformanceMode = ChkPrecisionMode?.IsChecked ?? false;
+            settings.FullscreenProtection = ChkFullscreenProtection?.IsChecked ?? true;
 
             SettingsManager.SaveSettings(settings);
             _radialWindow.RefreshShortcuts();
-
-            System.Windows.MessageBox.Show("Radial Wheel settings saved successfully!", "The Hub", 
-                MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             AppLogger.Log($"Error saving radial settings: {ex.Message}");
+        }
+    }
+
+    private void OnGlobalSaveSettingsClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            SettingsManager.SaveSettings();
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"[UI] Global save settings failed: {ex.Message}");
         }
     }
 
@@ -2344,6 +2755,19 @@ public partial class MainWindow : Window
         WsEditorSubtitle.Text = $"Configure wheel shortcuts for '{profile.Name}' (Active: {(profile.IsActive ? "Yes" : "No")})";
         WsEditorVisibilityBtn.Content = profile.IsVisibleInSwitcher ? "👁️ In Switcher" : "🙈 Hidden";
 
+        // Sync accent color swatch with this profile's stored color
+        try
+        {
+            var swatchColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter
+                                  .ConvertFromString(profile.AccentColor ?? "#3B82F6");
+            WsEditorColorSwatch.Background = new System.Windows.Media.SolidColorBrush(swatchColor);
+        }
+        catch
+        {
+            WsEditorColorSwatch.Background = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x3B, 0x82, 0xF6));
+        }
+
         // Refresh slices
         WsEditorCurrentAppsList.ItemsSource = null;
         WsEditorCurrentAppsList.ItemsSource = profile.Slices;
@@ -2352,6 +2776,7 @@ public partial class MainWindow : Window
 
         LoadInstalledAppsSuggestions();
     }
+
 
     private void OnSelectWorkspaceCardClick(object sender, MouseButtonEventArgs e)
     {
@@ -2417,20 +2842,43 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnWsEditorColorDotClick(object sender, RoutedEventArgs e)
+    // Stub — static color dots removed; color is now picked via ColorPickerControl popup.
+    private void OnWsEditorColorDotClick(object sender, RoutedEventArgs e) { /* no-op */ }
+
+    /// <summary>Opens the full-spectrum ColorPicker popup, pre-seeded with the current accent color.</summary>
+    private void OnWsEditorOpenColorPickerClick(object sender, RoutedEventArgs e)
     {
         if (_selectedRadialProfile == null) return;
-        if (sender is Button btn && btn.Tag is string hex && !string.IsNullOrWhiteSpace(hex))
+        try
         {
-            _selectedRadialProfile.AccentColor = hex;
-            SettingsManager.SaveSettings();
-            _selectedRadialProfile.NotifySlicesChanged();
-            _radialWindow.RefreshShortcuts();
-
-            // Refresh cards to redraw center dot with new color
-            WorkspacesCardsControl.ItemsSource = null;
-            WorkspacesCardsControl.ItemsSource = SettingsManager.Current.RadialProfiles;
+            // Pre-seed picker with current accent color
+            var hexStr = _selectedRadialProfile.AccentColor ?? "#3B82F6";
+            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter
+                            .ConvertFromString(hexStr);
+            WsEditorColorPicker.SelectedColor = color;
         }
+        catch { /* fall through with default picker color */ }
+        WsEditorColorPickerPopup.IsOpen = true;
+    }
+
+    /// <summary>Handles color selection from the ColorPickerControl popup.</summary>
+    private void OnWsEditorColorPickerChanged(System.Windows.Media.Color color)
+    {
+        if (_selectedRadialProfile == null) return;
+        string hex = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        _selectedRadialProfile.AccentColor = hex;
+
+        // Update live swatch
+        WsEditorColorSwatch.Background = new System.Windows.Media.SolidColorBrush(color);
+
+        // Persist and refresh the radial window + card thumbnails
+        SettingsManager.SaveSettings();
+        _selectedRadialProfile.NotifySlicesChanged();
+        _radialWindow.RefreshShortcuts();
+
+        // Refresh cards to redraw center dot with new color
+        WorkspacesCardsControl.ItemsSource = null;
+        WorkspacesCardsControl.ItemsSource = SettingsManager.Current.RadialProfiles;
     }
 
     private void OnWsEditorToggleVisibilityClick(object sender, RoutedEventArgs e)
@@ -2714,11 +3162,10 @@ public partial class MainWindow : Window
 
     private async void OnCheckForUpdatesClick(object sender, RoutedEventArgs e)
     {
-        BtnCheckUpdates.IsEnabled = false;
-        TxtUpdateStatus.Text = "Checking for updates...";
+        if (sender is System.Windows.Controls.Button btn) btn.IsEnabled = false;
         await Task.Delay(800);
-        TxtUpdateStatus.Text = "The Hub v0.1.0 • System is completely up to date! (Verified)";
-        BtnCheckUpdates.IsEnabled = true;
+        if (sender is System.Windows.Controls.Button btn2) btn2.IsEnabled = true;
+        _core.TriggerIslandEvent(new DynamicIslandEvent { Type = IslandEventType.SystemAlert, Title = "Updates", Subtitle = "The Hub v0.1.0 • Up to date", Glyph = "✅", DisplayDurationMs = 2500 });
     }
 
     private void OnPrecisionModeToggled(object sender, RoutedEventArgs e)

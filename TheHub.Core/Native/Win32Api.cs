@@ -189,6 +189,9 @@ public static class Win32Api
     [DllImport("user32.dll")]
     public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromPoint(POINT pt, int dwFlags);
+
     public static readonly IntPtr HWND_TOPMOST = (IntPtr)(-1);
     public const uint SWP_NOSIZE = 0x0001;
     public const uint SWP_NOMOVE = 0x0002;

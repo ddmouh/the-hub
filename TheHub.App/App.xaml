@@ -3,6 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TheHub.App">
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ThemeDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
         <!-- Shadcn UI Slider Styles (Global) -->
         <Style x:Key="SliderTrackDecreaseStyle" TargetType="RepeatButton">
             <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -168,5 +172,6 @@
         </Style>
 
         <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource ModernDarkScrollBarStyle}"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

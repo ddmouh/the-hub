@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Runtime.InteropServices;
 using TheHub.Common.Config;
 using TheHub.Common.Models;
 using TheHub.Core.Native;
@@ -165,12 +166,10 @@ public partial class RadialWindow : Window
 
         RefreshShortcuts();
 
-        double physicalCx = Win32Api.GetSystemMetrics(Win32Api.SM_CXSCREEN);
-        double dpiScaleX = physicalCx > 0 ? physicalCx / SystemParameters.PrimaryScreenWidth : 1.0;
-        double dpiScaleY = dpiScaleX;
-
-        double dipX = screenX / dpiScaleX;
-        double dipY = screenY / dpiScaleY;
+        // Use monitor-aware DIP conversion for correct multi-monitor positioning
+        var dipPt = PhysicalToDip(screenX, screenY);
+        double dipX = dipPt.X;
+        double dipY = dipPt.Y;
 
         Left = dipX - (Width / 2.0);
         Top = dipY - (Height / 2.0);
@@ -178,11 +177,11 @@ public partial class RadialWindow : Window
         WheelCanvas.SelectedLabel = "Center";
         _openTime = DateTime.UtcNow;
 
-        // Background Dimming
+        // Background Dimming — pass physical coords so dimmer can find the correct monitor
         var settings = SettingsManager.Current;
         if (settings.BackgroundDimming > 0)
         {
-            RadialDimmerOverlay.Instance.ShowDimmer(settings.BackgroundDimming, dipX, dipY);
+            RadialDimmerOverlay.Instance.ShowDimmer(settings.BackgroundDimming, screenX, screenY);
         }
 
         // Start bloom animation
@@ -218,17 +217,41 @@ public partial class RadialWindow : Window
     {
         if (!IsVisible) return;
 
-        double physicalCx = Win32Api.GetSystemMetrics(Win32Api.SM_CXSCREEN);
-        double dpiScaleX = physicalCx > 0 ? physicalCx / SystemParameters.PrimaryScreenWidth : 1.0;
-        double dpiScaleY = dpiScaleX;
-
-        double dipX = screenX / dpiScaleX;
-        double dipY = screenY / dpiScaleY;
-
-        double relX = dipX - Left;
-        double relY = dipY - Top;
+        var dipPt = PhysicalToDip(screenX, screenY);
+        double relX = dipPt.X - Left;
+        double relY = dipPt.Y - Top;
         UpdateHighlight(relX, relY);
     }
+
+    /// <summary>
+    /// Converts physical screen coordinates (from low-level mouse hook) to WPF DIPs
+    /// using the DPI of the monitor that contains the given point.
+    /// </summary>
+    private static Point PhysicalToDip(int physX, int physY)
+    {
+        // Query which monitor the point falls on (physical coords)
+        var pt = new Win32Api.POINT { x = physX, y = physY };
+        IntPtr hMonitor = Win32Api.MonitorFromPoint(pt, Win32Api.MONITOR_DEFAULTTONEAREST);
+
+        var mi = new Win32Api.MONITORINFO();
+        mi.cbSize = System.Runtime.InteropServices.Marshal.SizeOf(typeof(Win32Api.MONITORINFO));
+        if (Win32Api.GetMonitorInfo(hMonitor, ref mi))
+        {
+            GetDpiForMonitor(hMonitor, 0, out uint dpiX, out uint dpiY);
+            double scaleX = dpiX > 0 ? dpiX / 96.0 : 1.0;
+            double scaleY = dpiY > 0 ? dpiY / 96.0 : scaleX;
+            return new Point(mi.rcMonitor.Left / scaleX + (physX - mi.rcMonitor.Left) / scaleX,
+                             mi.rcMonitor.Top / scaleY + (physY - mi.rcMonitor.Top) / scaleY);
+        }
+
+        // Fallback: use primary screen DPI
+        double cx = Win32Api.GetSystemMetrics(Win32Api.SM_CXSCREEN);
+        double scale = cx > 0 ? cx / SystemParameters.PrimaryScreenWidth : 1.0;
+        return new Point(physX / scale, physY / scale);
+    }
+
+    [DllImport("Shcore.dll")]
+    private static extern int GetDpiForMonitor(IntPtr hmonitor, uint dpiType, out uint dpiX, out uint dpiY);
 
     public void Dismiss()
     {

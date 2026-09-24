@@ -94,6 +94,10 @@ public class AppSettings
     public bool WallpaperPauseOnBattery { get; set; } = true;
     public string WallpaperFitMode { get; set; } = "Fill"; // "Fill", "Fit", "Stretch"
 
+    // Global Typography & Custom Fonts (Section 6.3)
+    public string? GlobalFontFamily { get; set; }
+    public List<string> CustomFonts { get; set; } = new();
+
     public static AppSettings CreateDefault()
     {
         var settings = new AppSettings();

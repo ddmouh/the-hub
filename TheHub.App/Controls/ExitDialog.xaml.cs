@@ -19,11 +19,26 @@ public partial class ExitDialog : Window
         InitializeComponent();
     }
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    public static extern bool ReleaseCapture();
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    public static extern System.IntPtr SendMessage(System.IntPtr hWnd, int Msg, int wParam, int lParam);
+
     private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
         {
-            DragMove();
+            try
+            {
+                ReleaseCapture();
+                var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                if (handle != System.IntPtr.Zero)
+                {
+                    SendMessage(handle, 0xA1, 2, 0);
+                }
+            }
+            catch { }
         }
     }
 
