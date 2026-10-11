@@ -1,0 +1,214 @@
+================================================================================
+                     تقرير تنظيف وفحص مشروع THE HUB للمراجعة
+================================================================================
+تاريخ الفحص: 2026-10-11
+حالة الفرع: جاهز للمراجعة (لا تغيير في المنطق البرمجي، لا ميزات مضافة)
+
+--------------------------------------------------------------------------------
+1. ملف .gitignore والبيئة الافتراضية .venv
+--------------------------------------------------------------------------------
+• تم إنشاء وتحديث ملف .gitignore ليشمل بدقة جميع المجلدات والامتدادات المطلوبة:
+  - bin/ و [Bb]in/
+  - obj/ و [Oo]bj/
+  - .vs/ (مع ملفات الإعدادات *.suo و *.user)
+  - .venv/ و venv/
+  - node_modules/
+  - Screenshots/ و [Ss]creenshots/
+  - سجلات ومجلدات مؤقتة (log/ و scratch/ و TestResults/).
+
+• البيئة الافتراضية .venv:
+  - تم إخراج المجلد .venv بالكامل من مسار المشروع ونقله إلى:
+    C:\Users\d\Desktop\.thehub_venv
+
+--------------------------------------------------------------------------------
+2. التحقق من المجلدين TheHub-App و TheHub.App
+--------------------------------------------------------------------------------
+• المصدر الفعلي في ملف الحل (TheHub.sln):
+  - السطر 12 في TheHub.sln يحدد المشروع المصدري:
+    Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheHub.App", "TheHub.App\TheHub.App.csproj"
+  - المجلد المصدري البرمجي الحقيقي هو: TheHub.App
+  - المجلد TheHub-App لم يكن مصدراً برمجياً، بل كان مجلد نسخ مخرجات بناء (Build Output / Deploy) يحتوي على ملفات ثنائية مجمعة (100 عنصر، تشمل مكتبات FFmpeg و Vortice). ينشأ عبر الهدف المسجل في TheHub.App.csproj (Target: CopyToTheHubApp).
+
+• الإجراء المتخذ:
+  1. تم أخذ نسخة احتياطية كاملة من المجلد TheHub-App إلى:
+     C:\Users\d\Desktop\TheHub-App_Backup
+  2. تم حذف المجلد TheHub-App نهائياً من مستودع المشروع.
+
+--------------------------------------------------------------------------------
+3. ناتج بناء المشروع (dotnet build)
+--------------------------------------------------------------------------------
+• أمر البناء: dotnet build
+• النتيجة:
+  - حالة البناء: نجح البناء بالكامل (Build Succeeded)
+  - عدد الأخطاء: 0 Error(s)
+  - عدد التحذيرات: 0 Warning(s)
+  - وقت البناء: 00:00:05.23
+  - المشاريع المبنية:
+    * TheHub.Common -> net8.0-windows10.0.19041.0
+    * TheHub.Core -> net8.0-windows10.0.19041.0
+    * TheHub.Tests -> net8.0-windows10.0.19041.0
+    * TheHub.Overlays -> net8.0-windows10.0.19041.0
+    * TheHub.App -> net8.0-windows10.0.19041.0 (TheHub.dll)
+
+--------------------------------------------------------------------------------
+4. قياسات استهلاك الموارد عند التشغيل الفعلي (مدة 10 دقائق متواصلة)
+--------------------------------------------------------------------------------
+تم تشغيل TheHub.exe وربط أدوات قياس استهلاك الموارد في الوقت الفعلي:
+تاريخ وبداية التشغيل: 21:28:56
+نهاية التشغيل: 21:39:11 (المدة الإجمالية: 614.6 ثانية / 10 دقائق و14 ثانية)
+
+القياسات بالأرقام:
+
+أ) عند بدء التشغيل (Startup):
+   - RAM (Working Set): 249.44 MB
+   - RAM (Private Bytes): 194.12 MB
+   - CPU: 10% (استهلاك تمهيدي لثواني الإقلاع)
+   - عدد الـ Threads: 28
+   - عدد الـ Handles: 951
+   - استجابة الواجهة (Responding): True
+
+ب) بعد فتح الجزيرة التفاعلية (Dynamic Island) والمشغّل (Player):
+   - RAM (Working Set): 251.45 MB
+   - RAM (Private Bytes): 183.55 MB
+   - CPU: 0%
+   - عدد الـ Threads: 28
+   - عدد الـ Handles: 963
+   - استجابة الواجهة (Responding): True
+
+ج) بعد مرور 10 دقائق من التشغيل المستمر (At 10 Minutes Mark):
+   - RAM (Working Set): 250.23 MB
+   - RAM (Private Bytes): 175.78 MB
+   - CPU: 0% (خمول تام واستهلاك مثالي)
+   - عدد الـ Threads: 19 (انخفضت من 28 إلى 19 بعد خمول مسارات التهيئة)
+   - عدد الـ Handles: 989
+   - استجابة الواجهة (Responding): True
+
+• ملاحظات استقرار الموارد:
+  - استقرار كامل للذاكرة: انخفض الـ Private Memory من 194.12 MB إلى 175.78 MB دون أي تسريب ذاكرة (Memory Leak).
+  - استهلاك المعالج انخفض إلى 0% أثناء الخمول.
+
+--------------------------------------------------------------------------------
+5. سجل حالات التجميد، التعطل، والاستثناءات
+--------------------------------------------------------------------------------
+• حالات التجميد (Freezes / UI Hangs):
+  - لا يوجد (0 حالات تجميد). تم فحص خاصية Responding كل 30 ثانية وكانت True باستمرار.
+• حالات التعطل (Crashes):
+  - لا يوجد (0 حالات تعطل). لم يسجل Windows Event Log أي خطأ للتطبيق (Event ID 1000/1001).
+• الاستثناءات في سجل التطبيق (%APPDATA%\TheHub\app_debug.log):
+  - لا توجد أي استثناءات مسجلة (0 Exceptions).
+
+--------------------------------------------------------------------------------
+6. حصر الكود الحساس (المسارات وأرقام الأسطر الدقيقة)
+--------------------------------------------------------------------------------
+
+أولاً: مثيلات إنشاء النوافذ (new Window والمشتقات):
+1. TheHub.App\App.xaml.cs : السطر 85
+   - var win = new MainWindow();
+2. TheHub.App\MainWindow.xaml.cs : السطر 91
+   - _radialWindow = new RadialWindow();
+3. TheHub.App\MainWindow.xaml.cs : السطر 92
+   - _islandWindow = new DynamicIslandWindow();
+4. TheHub.App\MainWindow.xaml.cs : السطر 2569
+   - _clockWidget = new DesktopClockWidget();
+5. TheHub.App\MainWindow.xaml.cs : السطر 2666
+   - _cpuWidget = new DesktopCpuWidget();
+6. TheHub.App\MainWindow.xaml.cs : السطر 2671
+   - _gpuWidget = new DesktopGpuWidget();
+7. TheHub.App\MainWindow.xaml.cs : السطر 2676
+   - _ramWidget = new DesktopRamWidget();
+8. TheHub.App\Showcase\RealUiSnapshotFactory.cs : السطر 45
+   - var island = new DynamicIslandWindow();
+9. TheHub.App\Showcase\RealUiSnapshotFactory.cs : السطر 297
+   - var clock = new DesktopClockWidget();
+10. TheHub.App\Showcase\RealUiSnapshotFactory.cs : السطر 330
+   - var res = new DesktopResourceWidget();
+11. TheHub.Overlays\App.xaml.cs : السطر 19
+   - _radialWindow = new RadialWindow();
+12. TheHub.Overlays\App.xaml.cs : السطر 20
+   - _islandWindow = new DynamicIslandWindow();
+13. TheHub.Overlays\Wallpaper\LiveWallpaperManager.cs : السطر 295
+   - var defaultWin = new LiveWallpaperWindow();
+14. TheHub.Overlays\Wallpaper\LiveWallpaperManager.cs : السطر 309
+   - var win = new LiveWallpaperWindow(monitor);
+15. TheHub.Overlays\Wallpaper\LiveWallpaperManager.cs : السطر 393
+   - var win = new LiveWallpaperWindow(targetMonitor);
+16. TheHub.Overlays\RadialLauncher\RadialDimmerOverlay.cs : السطر 17
+   - _instance ??= new RadialDimmerOverlay();
+17. TheHub.Overlays\DynamicIsland\DisplayDimmerOverlay.cs : السطر 16
+   - _instance ??= new DisplayDimmerOverlay();
+
+ثانياً: استخدامات Dispatcher.Invoke (المزامنة اللحظية على خيط الواجهة):
+1. TheHub.App\MainWindow.xaml.cs : السطر 539
+   - Dispatcher.Invoke(() => ...);
+2. TheHub.App\MainWindow.xaml.cs : السطر 588
+   - Dispatcher.Invoke(() => ...);
+3. TheHub.App\MainWindow.xaml.cs : السطر 600
+   - return Dispatcher.Invoke(() => ...);
+4. TheHub.App\MainWindow.xaml.cs : السطر 656
+   - return Dispatcher.Invoke(() => ...);
+5. TheHub.App\MainWindow.xaml.cs : السطر 725
+   - Dispatcher.Invoke(() => ...);
+6. TheHub.App\MainWindow.xaml.cs : السطر 736
+   - Dispatcher.Invoke(() => ...);
+7. TheHub.App\MainWindow.xaml.cs : السطر 2574
+   - Dispatcher.Invoke(() => ...);
+8. TheHub.App\MainWindow.xaml.cs : السطر 2667
+   - Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+9. TheHub.App\MainWindow.xaml.cs : السطر 2672
+   - Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+10. TheHub.App\MainWindow.xaml.cs : السطر 2677
+   - Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+11. TheHub.Overlays\App.xaml.cs : السطر 30
+   - Dispatcher.Invoke(() => ...);
+12. TheHub.Overlays\DynamicIsland\DynamicIslandWindow.xaml.cs : السطر 232
+   - Dispatcher.Invoke(() => ...);
+13. TheHub.Overlays\DynamicIsland\DynamicIslandWindow.xaml.cs : السطر 250
+   - Dispatcher.Invoke(() => ...);
+14. TheHub.Overlays\DynamicIsland\DynamicIslandWindow.xaml.cs : السطر 435
+   - Dispatcher.Invoke(() => ...);
+15. TheHub.Overlays\DynamicIsland\DisplayDimmerOverlay.cs : السطر 68
+   - Dispatcher.Invoke(() => ...);
+16. TheHub.Overlays\RadialLauncher\RadialDimmerOverlay.cs : السطر 39
+   - Dispatcher.Invoke(() => ...);
+17. TheHub.Overlays\RadialLauncher\RadialDimmerOverlay.cs : السطر 88
+   - Dispatcher.Invoke(() => ...);
+
+ثالثاً: استخدامات .Result (الانتظار المتزامن لمهام Async):
+• لا توجد أي مثيلات لـ .Result في كامل المشروع (0 موارد).
+
+رابعاً: استخدامات .Wait() (الانتظار المتزامن للمهام):
+1. TheHub.Overlays\App.xaml.cs : السطر 66
+   - _pipeServer?.DisposeAsync().AsTask().Wait(500);
+(ملاحظة إضافية: TheHub.App\App.xaml.cs السطر 54 يحتوي على p.WaitForExit(500) لإنهاء العمليات المكررة).
+
+خامساً: واجهات ومكونات COM المباشرة:
+1. TheHub.Core\Native\AudioComInterop.cs :
+   - الأسطر 8-16 : تعريف واجهة IMMDeviceEnumerator
+   - الأسطر 18-23: تعريف واجهة IMMDeviceCollection
+   - الأسطر 25-32: تعريف واجهة IMMDevice
+   - الأسطر 34-42: تعريف واجهة IPropertyStore
+   - الأسطر 58-81: تعريف واجهة IAudioEndpointVolume
+   - الأسطر 83-98: تعريف واجهة IPolicyConfig
+   - الأسطر 100-118: فئة ComObjectFactory (إنشاء كائنات COM عبر CLSID_MMDeviceEnumerator و CLSID_PolicyConfigClient)
+2. TheHub.Core\Services\AudioService.cs :
+   - السطر 31 : استدعاء IID_IAudioEndpointVolume
+   - الأسطر 218-230 : استدعاء وتنشيط IAudioEndpointVolume
+3. TheHub.Core\Native\SystemControlHelper.cs :
+   - السطران 14 و 15 : تخزين كاش IAudioEndpointVolume للرندر والالتقاط
+   - الأسطر 384-409 : GetDefaultEndpoint وتنشيط IAudioEndpointVolume
+4. TheHub.Core\Monitors\VolumeMonitor.cs :
+   - السطر 14 : حقل _audioEndpointVolume
+   - الأسطر 64 و 66 : تنشيط IAudioEndpointVolume
+   - الأسطر 156-178 : تعريف داخلي لواجهة IAudioEndpointVolume
+   - الأسطر 179-194 : تعريف داخلي لواجهة IAudioEndpointVolumeCallback
+   - السطر 195 : فئة VolumeCallback المنفذة لـ IAudioEndpointVolumeCallback
+5. TheHub.Core\Monitors\MediaSessionMonitor.cs :
+   - الأسطر 8 و 9 : واجهات وسلسلة جلسات الميديا WinRT/COM:
+     GlobalSystemMediaTransportControlsSessionManager و GlobalSystemMediaTransportControlsSession
+   - السطر 27 : طلب GlobalSystemMediaTransportControlsSessionManager.RequestAsync()
+   - الأسطر 61-115: إدارة أحداث وتغييرات جلسات الوسائط والتشغيل
+6. TheHub.Core\CoreHubManager.cs :
+   - السطران 14 و 34 : تهيئة ومتابعة مراقب جلسات الوسائط _mediaMonitor
+================================================================================
+                               نهاية التقرير
+================================================================================

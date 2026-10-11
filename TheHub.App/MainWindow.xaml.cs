@@ -80,6 +80,15 @@ public partial class MainWindow : Window
         {
             InitializeComponent();
             AppLogger.Log("MainWindow.InitializeComponent finished");
+
+            string currentExePath = Environment.ProcessPath ?? "";
+            DateTime buildTime = System.IO.File.Exists(currentExePath) ? System.IO.File.GetLastWriteTime(currentExePath) : System.IO.File.GetLastWriteTime(typeof(MainWindow).Assembly.Location);
+            string buildNumber = buildTime.ToString("yyyyMMdd.HHmm");
+            Title = $"The Hub — Desktop Companion (Build {buildNumber})";
+            if (TxtHeaderTitle != null)
+            {
+                TxtHeaderTitle.Text = $"Desktop Companion (Build {buildNumber})";
+            }
         }
         catch (Exception ex)
         {

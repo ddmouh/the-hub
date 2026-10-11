@@ -281,7 +281,7 @@ public class DynamicIslandViewModel : INotifyPropertyChanged
             var playback = await _audioService.GetPlaybackDevicesAsync();
             var recording = await _audioService.GetRecordingDevicesAsync();
 
-            App.Current?.Dispatcher?.Invoke(() =>
+            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
             {
                 _isInternalUpdating = true;
                 try

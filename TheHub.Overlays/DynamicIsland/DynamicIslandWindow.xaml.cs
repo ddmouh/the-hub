@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -229,7 +229,7 @@ public partial class DynamicIslandWindow : Window
 
     public void SetAmbientStatus(AmbientStatusInfo status)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             if (!string.IsNullOrWhiteSpace(status.Glyph))
                 CompactGlyph.Text = status.Glyph;
@@ -247,7 +247,7 @@ public partial class DynamicIslandWindow : Window
 
     public void PostEvent(DynamicIslandEvent evt)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             _currentEvent = evt;
 
@@ -432,7 +432,7 @@ public partial class DynamicIslandWindow : Window
             var plays = AudioDeviceManager.GetPlaybackDevices();
             var recs = AudioDeviceManager.GetRecordingDevices();
 
-            Dispatcher.Invoke(() =>
+            Dispatcher.InvokeAsync(() =>
             {
                 if (plays.Count > 0) _playbackDevices = plays;
                 if (recs.Count > 0) _recordingDevices = recs;

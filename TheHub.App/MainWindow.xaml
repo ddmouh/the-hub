@@ -466,7 +466,7 @@
                 </StackPanel>
 
                 <!-- Title Drag area -->
-                <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Desktop Companion v0.1" FontSize="11" Foreground="#71717A"/>
+                <TextBlock x:Name="TxtHeaderTitle" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Desktop Companion v0.1" FontSize="11" Foreground="#71717A"/>
 
                 <!-- Window Control Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">

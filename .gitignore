@@ -3,6 +3,7 @@ bin/
 obj/
 [Bb]in/
 [Oo]bj/
+TheHub-App/
 
 # Visual Studio & IDEs
 .vs/

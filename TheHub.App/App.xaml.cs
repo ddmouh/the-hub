@@ -56,7 +56,9 @@ public partial class App : System.Windows.Application
             }
         }
 
-        AppLogger.Log($"App.OnStartup started args=[{string.Join(",", e.Args)}]");
+        string currentExePath = Environment.ProcessPath ?? "";
+        DateTime buildTime = File.Exists(currentExePath) ? File.GetLastWriteTime(currentExePath) : File.GetLastWriteTime(typeof(App).Assembly.Location);
+        AppLogger.Log($"App.OnStartup started: ExePath='{currentExePath}', PID={Environment.ProcessId}, BuildTime='{buildTime:yyyy-MM-dd HH:mm:ss}', args=[{string.Join(",", e.Args)}]");
 
         AppDomain.CurrentDomain.UnhandledException += (s, args) =>
         {
