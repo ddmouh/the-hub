@@ -1,25 +1,37 @@
-## Visual Studio / C# / .NET Ignore Rules
+# Build and Output Directories
+bin/
+obj/
 [Bb]in/
 [Oo]bj/
-[Ll]og/
-[Ll]ogs/
-TheHub-App/
-TestResults/
+
+# Visual Studio & IDEs
+.vs/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
-.vs/
 
-# Scratch & Temporary
-scratch/
-download_ffmpeg.ps1
+# Python Virtual Environments
+.venv/
+venv/
+env/
+
+# Node.js
 node_modules/
 
-# Video wallpaper samples (large binaries)
-*.mp4
+# Application generated artifacts & Screenshots
+Screenshots/
+[Ss]creenshots/
 
-# Windows
+# Logs & Temporary Files
+log/
+logs/
+[Ll]og/
+[Ll]ogs/
+scratch/
+TestResults/
+
+# OS Generated Files
 Thumbs.db
 ehthumbs.db
 Desktop.ini

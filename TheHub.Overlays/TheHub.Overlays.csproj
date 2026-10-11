@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="TheHub" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Flyleaf.FFmpeg" Version="9.0.0" />
     <PackageReference Include="FlyleafLib" Version="3.11.8" />
   </ItemGroup>

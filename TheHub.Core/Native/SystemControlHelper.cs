@@ -184,18 +184,20 @@ public static class SystemControlHelper
     public static int GetScreenBrightness()
     {
         if (_brightnessInitialized) return _cachedBrightness;
-        _brightnessInitialized = true;
 
-        // Initialize brightness on a background thread to avoid blocking UI thread
-        Task.Run(() =>
+        try
         {
             if (TryGetDxvaBrightness(out uint cur, out _))
             {
-                _cachedBrightness = (int)cur;
+                _cachedBrightness = (int)Math.Clamp(cur, 10, 100);
             }
-        });
+        }
+        catch { }
+        finally
+        {
+            _brightnessInitialized = true;
+        }
 
-        // Return a reasonable default while initialization happens in background
         return _cachedBrightness;
     }
 

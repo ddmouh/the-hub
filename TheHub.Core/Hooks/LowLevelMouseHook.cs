@@ -11,7 +11,6 @@ public class LowLevelMouseHook : IDisposable
     private static Win32Api.HookProc? _staticHookProc;
     private static LowLevelMouseHook? _activeInstance;
 
-    private bool _isTriggerDown;
     private Win32Api.POINT _downPoint;
     private CancellationTokenSource? _holdCts;
     private bool _isWheelActive;
@@ -98,12 +97,10 @@ public class LowLevelMouseHook : IDisposable
                     if (isClickMode && inst._isWheelActive)
                     {
                         inst._isWheelActive = false;
-                        inst._isTriggerDown = false;
                         Task.Run(() => inst.RadialReleaseRequested?.Invoke());
                         return (IntPtr)1;
                     }
 
-                    inst._isTriggerDown = true;
                     inst._downPoint = hookStruct.pt;
                     inst._holdCts?.Cancel();
                     inst._holdCts = new CancellationTokenSource();
@@ -144,7 +141,6 @@ public class LowLevelMouseHook : IDisposable
                 }
                 else if (isUp)
                 {
-                    inst._isTriggerDown = false;
                     inst._holdCts?.Cancel();
 
                     bool isClickMode = string.Equals(settings.GestureBehavior, "Click", StringComparison.OrdinalIgnoreCase);
@@ -246,7 +242,6 @@ public class LowLevelMouseHook : IDisposable
     public void ResetWheelState()
     {
         _isWheelActive = false;
-        _isTriggerDown = false;
         _holdCts?.Cancel();
     }
 

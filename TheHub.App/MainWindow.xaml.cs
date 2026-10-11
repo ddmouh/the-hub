@@ -19,6 +19,7 @@ using TheHub.Overlays.Wallpaper;
 using TheHub.Overlays.Widgets;
 using Button = System.Windows.Controls.Button;
 using RadioButton = System.Windows.Controls.RadioButton;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace TheHub.App;
 
@@ -57,7 +58,7 @@ public partial class MainWindow : Window
     private DesktopCpuWidget? _cpuWidget;
     private DesktopGpuWidget? _gpuWidget;
     private DesktopRamWidget? _ramWidget;
-    private OverviewViewModel _overviewViewModel;
+    private readonly OverviewViewModel _overviewViewModel;
     private string _selectedMonitorTarget = "ALL";
     public WallpaperManager WallpaperManager => _wallpaperManager;
     private readonly DispatcherTimer _ramTimer;
@@ -375,8 +376,11 @@ public partial class MainWindow : Window
             ChkShowQuickControls.IsChecked = settings.IslandShowHoverQuickControls;
             ChkShowMicMute.IsChecked = settings.IslandShowMicMute;
             ChkShowBrightness.IsChecked = settings.IslandShowBrightnessControl;
-            CmbDynamicIslandFont.ItemsSource = _overviewViewModel.AvailableFontFamilies;
-            CmbDynamicIslandFont.SelectedItem = _overviewViewModel.SelectedDynamicIslandFontFamily;
+            if (_overviewViewModel != null)
+            {
+                CmbDynamicIslandFont.ItemsSource = _overviewViewModel.AvailableFontFamilies;
+                CmbDynamicIslandFont.SelectedItem = _overviewViewModel.SelectedDynamicIslandFontFamily;
+            }
 
             SldIslandScale.Value = settings.IslandScale;
             TxtScaleValue.Text = $"{(int)Math.Round(settings.IslandScale * 100)}%";
@@ -413,7 +417,10 @@ public partial class MainWindow : Window
             PopulateMonitorSelectorUI();
             RefreshWallpapersGallery();
             RestoreActiveWallpapers();
-            SetClockWidgetState(_overviewViewModel.IsClockActive);
+            if (_overviewViewModel != null)
+            {
+                SetClockWidgetState(_overviewViewModel.IsClockActive);
+            }
 
             _core.AmbientStatusChanged += status => _islandWindow.SetAmbientStatus(status);
 
@@ -516,7 +523,223 @@ public partial class MainWindow : Window
             PageIsland.Visibility = (index == 3) ? Visibility.Visible : Visibility.Collapsed;
             PageAi.Visibility = (index == 4) ? Visibility.Visible : Visibility.Collapsed;
             PageOptions.Visibility = (index == 5) ? Visibility.Visible : Visibility.Collapsed;
+            if (PageGallery != null)
+            {
+                PageGallery.Visibility = (index == 6) ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
+    }
+
+    /// <summary>
+    /// Navigates the main window to a specific top-level page and optional sub-tab.
+    /// Used by the Showcase Gallery to inspect active UI screens.
+    /// </summary>
+    public void NavigateToSection(int pageIndex, int subTabIndex = 0)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            Show();
+            if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+            Activate();
+
+            if (PageOverview == null || PageWorkspaces == null || PageRadial == null || 
+                PageIsland == null || PageAi == null || PageOptions == null) return;
+
+            PageOverview.Visibility = (pageIndex == 0) ? Visibility.Visible : Visibility.Collapsed;
+            PageWorkspaces.Visibility = (pageIndex == 1) ? Visibility.Visible : Visibility.Collapsed;
+            PageRadial.Visibility = (pageIndex == 2) ? Visibility.Visible : Visibility.Collapsed;
+            PageIsland.Visibility = (pageIndex == 3) ? Visibility.Visible : Visibility.Collapsed;
+            PageAi.Visibility = (pageIndex == 4) ? Visibility.Visible : Visibility.Collapsed;
+            PageOptions.Visibility = (pageIndex == 5) ? Visibility.Visible : Visibility.Collapsed;
+            if (PageGallery != null)
+            {
+                PageGallery.Visibility = (pageIndex == 6) ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (pageIndex == 0 && NavBtnOverview != null) NavBtnOverview.IsChecked = true;
+            else if (pageIndex == 1 && NavBtnWorkspaces != null) NavBtnWorkspaces.IsChecked = true;
+            else if (pageIndex == 2 && NavBtnRadial != null) NavBtnRadial.IsChecked = true;
+            else if (pageIndex == 3 && NavBtnIsland != null) NavBtnIsland.IsChecked = true;
+            else if (pageIndex == 4 && NavBtnAi != null) NavBtnAi.IsChecked = true;
+            else if (pageIndex == 5 && NavBtnOptions != null) NavBtnOptions.IsChecked = true;
+            else if (pageIndex == 6 && NavBtnGallery != null) NavBtnGallery.IsChecked = true;
+
+            if (pageIndex == 0)
+            {
+                if (subTabIndex == 0 && TabBtnOverviewWallpapers != null) TabBtnOverviewWallpapers.IsChecked = true;
+                else if (subTabIndex == 1 && TabBtnOverviewWidgets != null) TabBtnOverviewWidgets.IsChecked = true;
+                else if (subTabIndex == 2 && TabBtnOverviewTaskbar != null) TabBtnOverviewTaskbar.IsChecked = true;
+            }
+            else if (pageIndex == 2)
+            {
+                if (subTabIndex == 0 && TabBtnActivation != null) TabBtnActivation.IsChecked = true;
+                else if (subTabIndex == 1 && TabBtnAppearance != null) TabBtnAppearance.IsChecked = true;
+                else if (subTabIndex == 2 && TabBtnWorkspaces != null) TabBtnWorkspaces.IsChecked = true;
+            }
+            else if (pageIndex == 3)
+            {
+                _islandWindow.Show();
+            }
+        });
+    }
+
+    public void ShowRadialWheel()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            Core.Native.Win32Api.GetCursorPos(out var pt);
+            _radialWindow.ShowAt(pt.x, pt.y);
+        });
+    }
+
+    /// <summary>
+    /// Captures a live pixel-perfect BitmapSource of a specific dashboard section, subtab, or view directly from this MainWindow.
+    /// </summary>
+    public System.Windows.Media.Imaging.BitmapSource? CaptureSectionSnapshot(int pageIndex, int subTabIndex = 0)
+    {
+        return Dispatcher.Invoke(() =>
+        {
+            try
+            {
+                int curPage = 0;
+                if (PageWorkspaces?.Visibility == Visibility.Visible) curPage = 1;
+                else if (PageRadial?.Visibility == Visibility.Visible) curPage = 2;
+                else if (PageIsland?.Visibility == Visibility.Visible) curPage = 3;
+                else if (PageAi?.Visibility == Visibility.Visible) curPage = 4;
+                else if (PageOptions?.Visibility == Visibility.Visible) curPage = 5;
+                else if (PageGallery?.Visibility == Visibility.Visible) curPage = 6;
+
+                // Temporarily activate the requested page and subtab
+                NavigateToSection(pageIndex, subTabIndex);
+                UpdateLayout();
+
+                FrameworkElement? target = pageIndex switch
+                {
+                    0 => PageOverview,
+                    1 => PageWorkspaces,
+                    2 => PageRadial,
+                    3 => PageIsland,
+                    4 => PageAi,
+                    5 => PageOptions,
+                    _ => PageOverview
+                };
+
+                if (target == null) return null;
+
+                double w = target.ActualWidth > 0 ? target.ActualWidth : 940;
+                double h = target.ActualHeight > 0 ? target.ActualHeight : 620;
+
+                int pixelW = Math.Max(1, (int)Math.Ceiling(w));
+                int pixelH = Math.Max(1, (int)Math.Ceiling(h));
+
+                var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap(pixelW, pixelH, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                rtb.Render(target);
+                rtb.Freeze();
+
+                // Restore previous active page
+                NavigateToSection(curPage, 0);
+
+                return rtb;
+            }
+            catch
+            {
+                return null;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Captures a live pixel-perfect BitmapSource of a modal dialog directly from this MainWindow.
+    /// </summary>
+    public System.Windows.Media.Imaging.BitmapSource? CaptureModalSnapshot(string modalName)
+    {
+        return Dispatcher.Invoke(() =>
+        {
+            try
+            {
+                FrameworkElement? modal = modalName switch
+                {
+                    "IconPicker" => IconPickerModal,
+                    "InstalledApps" => InstalledAppsModal,
+                    _ => null
+                };
+
+                if (modal == null) return null;
+
+                var prevVis = modal.Visibility;
+                modal.Visibility = Visibility.Visible;
+                UpdateLayout();
+
+                double w = modal.ActualWidth > 0 ? modal.ActualWidth : 940;
+                double h = modal.ActualHeight > 0 ? modal.ActualHeight : 620;
+
+                int pixelW = Math.Max(1, (int)Math.Ceiling(w));
+                int pixelH = Math.Max(1, (int)Math.Ceiling(h));
+
+                var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap(pixelW, pixelH, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                rtb.Render(modal);
+                rtb.Freeze();
+
+                modal.Visibility = prevVis;
+                UpdateLayout();
+
+                return rtb;
+            }
+            catch
+            {
+                return null;
+            }
+        });
+    }
+
+    protected override async void OnPreviewKeyDown(KeyEventArgs e)
+    {
+        base.OnPreviewKeyDown(e);
+        // Developer Quick Action: Ctrl + Shift + S triggers full UI Flow export & opens folder
+        if (e.Key == Key.S && (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            e.Handled = true;
+            try
+            {
+                var registry = new Showcase.ViewSnapshotRegistry();
+                await Showcase.ScreenSnapshotExporter.ExportAllAsync(registry.GetAllSnapshots());
+                Showcase.ScreenSnapshotExporter.OpenScreenshotsDirectory();
+                _core.TriggerIslandEvent(new DynamicIslandEvent
+                {
+                    Type = IslandEventType.SystemAlert,
+                    Title = "UI Flow Exported",
+                    Subtitle = "Saved 17 high-res screens to /Screenshots/UI_Flow",
+                    Glyph = "📸",
+                    DisplayDurationMs = 3000
+                });
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Log($"Ctrl+Shift+S Export error: {ex.Message}");
+            }
+        }
+    }
+
+    public void ShowIconPickerModal()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            Show();
+            if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+            Activate();
+            if (IconPickerModal != null) IconPickerModal.Visibility = Visibility.Visible;
+        });
+    }
+
+    public void ShowInstalledAppsModal()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            Show();
+            if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+            Activate();
+            if (InstalledAppsModal != null) InstalledAppsModal.Visibility = Visibility.Visible;
+        });
     }
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e)
@@ -560,7 +783,7 @@ public partial class MainWindow : Window
         ShowCustomExitDialog();
     }
 
-    private void ShowCustomExitDialog()
+    public void ShowCustomExitDialog()
     {
         try
         {
@@ -2377,7 +2600,7 @@ public partial class MainWindow : Window
 
     private void OnClockWidgetPositionChanged(object? sender, EventArgs e)
     {
-        if (_clockWidget == null || _overviewViewModel?.Config == null) return;
+        if (_clockWidget == null || _overviewViewModel == null || _overviewViewModel.Config == null) return;
         _overviewViewModel.Config.ClockLeft = _clockWidget.Left;
         _overviewViewModel.Config.ClockTop = _clockWidget.Top;
         _overviewViewModel.Config.Save();

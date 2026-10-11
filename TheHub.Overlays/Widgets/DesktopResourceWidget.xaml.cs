@@ -91,7 +91,7 @@ public partial class DesktopResourceWidget : DesktopWidgetBase
         return ((long)ft.dwHighDateTime << 32) | (uint)ft.dwLowDateTime;
     }
 
-    private void UpdateMetrics()
+    public void UpdateMetrics()
     {
         // 1. Calculate CPU Usage
         if (GetSystemTimes(out var idle, out var kernel, out var user))

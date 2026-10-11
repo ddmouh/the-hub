@@ -328,7 +328,7 @@ public partial class DesktopClockWidget : DesktopWidgetBase
         catch { }
     }
 
-    private void UpdateClock()
+    public void UpdateClock()
     {
         var now = DateTime.Now;
 

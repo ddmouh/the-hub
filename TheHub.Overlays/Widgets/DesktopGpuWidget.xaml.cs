@@ -42,7 +42,10 @@ public partial class DesktopGpuWidget : DesktopWidgetBase
 
     private void OnDragBarMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+        if (!IsPositionLocked && e.LeftButton == MouseButtonState.Pressed)
+        {
+            try { DragMove(); } catch { }
+        }
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => CloseWidget();

@@ -42,7 +42,7 @@ public class CoreHubManager : IDisposable
         _activeAppMonitor.AmbientStatusChanged += status => AmbientStatusChanged?.Invoke(status);
     }
 
-    public async Task StartAsync()
+    public Task StartAsync()
     {
         var settings = SettingsManager.Current;
 
@@ -85,6 +85,8 @@ public class CoreHubManager : IDisposable
             _mediaMonitor.MediaEventOccurred += evt => DynamicIslandEventReceived?.Invoke(evt);
             _ = _mediaMonitor.InitializeAsync();
         }
+
+        return Task.CompletedTask;
     }
 
     public void TriggerIslandEvent(DynamicIslandEvent evt)

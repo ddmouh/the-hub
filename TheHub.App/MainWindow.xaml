@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TheHub.App"
         xmlns:controls="clr-namespace:TheHub.App.Controls"
+        xmlns:showcase="clr-namespace:TheHub.App.Showcase"
         Title="The Hub — Desktop Companion"
         Height="680" Width="980"
         MinHeight="560" MinWidth="840"
@@ -497,12 +498,13 @@
                     <StackPanel Grid.Row="0">
                         <TextBlock Text="NAVIGATION" FontSize="10.5" FontWeight="Bold" Foreground="#52525B" Margin="10,0,0,10"/>
                         
-                        <RadioButton Content="⚡  Overview" Style="{StaticResource NavButtonStyle}" IsChecked="True" Checked="OnNavChecked" Tag="0"/>
-                        <RadioButton Content="📁  Workspaces" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="1"/>
-                        <RadioButton Content="🎯  Radial Launcher" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="2"/>
-                        <RadioButton Content="🏝️  Dynamic Island" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="3"/>
-                        <RadioButton Content="🤖  AI Assistant" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="4"/>
-                        <RadioButton Content="⚙️  Options" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="5"/>
+                        <RadioButton x:Name="NavBtnOverview" Content="⚡  Overview" Style="{StaticResource NavButtonStyle}" IsChecked="True" Checked="OnNavChecked" Tag="0"/>
+                        <RadioButton x:Name="NavBtnWorkspaces" Content="📁  Workspaces" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="1"/>
+                        <RadioButton x:Name="NavBtnRadial" Content="🎯  Radial Launcher" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="2"/>
+                        <RadioButton x:Name="NavBtnIsland" Content="🏝️  Dynamic Island" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="3"/>
+                        <RadioButton x:Name="NavBtnAi" Content="🤖  AI Assistant" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="4"/>
+                        <RadioButton x:Name="NavBtnOptions" Content="⚙️  Options" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="5"/>
+                        <RadioButton x:Name="NavBtnGallery" Content="🖼️  Showcase Gallery" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="6"/>
                     </StackPanel>
 
                     <!-- Bottom Quick Actions -->
@@ -2191,7 +2193,10 @@
                     </ScrollViewer>
                 </Grid>
 
-
+                <!-- TAB 6: UI FLOW & SCREEN SHOWCASE GALLERY -->
+                <Grid x:Name="PageGallery" Visibility="Collapsed">
+                    <showcase:ScreensGalleryView/>
+                </Grid>
 
             </Grid>
         </Grid>
