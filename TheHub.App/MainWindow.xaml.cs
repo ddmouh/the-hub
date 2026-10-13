@@ -18,6 +18,7 @@ using TheHub.Overlays.RadialLauncher;
 using TheHub.Overlays.Wallpaper;
 using TheHub.Overlays.Widgets;
 using TheHub.Core.AI;
+using TheHub.Core.Modules;
 using Button = System.Windows.Controls.Button;
 using RadioButton = System.Windows.Controls.RadioButton;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -113,14 +114,14 @@ public partial class MainWindow : Window
         _workspaceModule = new WorkspaceModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
         _widgetsModule = new WidgetsModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
         _aiAssistantModule = new AIAssistantModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
-        _aiAssistantModule.ConfirmElevatedActionAsync = async (intent) =>
+        _aiAssistantModule.ConfirmElevatedActionAsync = (intent) =>
         {
-            var mbResult = MessageBox.Show(
+            var mbResult = System.Windows.MessageBox.Show(
                 $"The AI Assistant requested an elevated action:\n\nTool: {intent.ToolName}\nArguments: {string.Join(", ", intent.Arguments.Select(kv => $"{kv.Key}={kv.Value}"))}\n\nDo you want to authorize this action?",
                 "Security Sandbox — Elevated Permission Confirmation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
-            return mbResult == MessageBoxResult.Yes;
+            return Task.FromResult(mbResult == MessageBoxResult.Yes);
         };
         _ = _aiAssistantModule.StartAsync();
         _trayService = new TrayIconService();
@@ -561,7 +562,7 @@ public partial class MainWindow : Window
     /// </summary>
     public void NavigateToSection(int pageIndex, int subTabIndex = 0)
     {
-        Dispatcher.Invoke(() =>
+        Action act = () =>
         {
             Show();
             if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
@@ -605,16 +606,22 @@ public partial class MainWindow : Window
             {
                 _islandModule.ToggleVisibility(true);
             }
-        });
+        };
+
+        if (CheckAccess()) act();
+        else Core.Bridge.UiBridge.Instance.Post(act);
     }
 
     public void ShowRadialWheel()
     {
-        Dispatcher.Invoke(() =>
+        Action act = () =>
         {
             Core.Native.Win32Api.GetCursorPos(out var pt);
             _radialWindow.ShowAt(pt.x, pt.y);
-        });
+        };
+
+        if (CheckAccess()) act();
+        else Core.Bridge.UiBridge.Instance.Post(act);
     }
 
     /// <summary>
@@ -622,7 +629,7 @@ public partial class MainWindow : Window
     /// </summary>
     public System.Windows.Media.Imaging.BitmapSource? CaptureSectionSnapshot(int pageIndex, int subTabIndex = 0)
     {
-        return Dispatcher.Invoke(() =>
+        Func<System.Windows.Media.Imaging.BitmapSource?> func = () =>
         {
             try
             {
@@ -670,7 +677,9 @@ public partial class MainWindow : Window
             {
                 return null;
             }
-        });
+        };
+
+        return CheckAccess() ? func() : Dispatcher.Invoke(func);
     }
 
     /// <summary>
@@ -678,7 +687,7 @@ public partial class MainWindow : Window
     /// </summary>
     public System.Windows.Media.Imaging.BitmapSource? CaptureModalSnapshot(string modalName)
     {
-        return Dispatcher.Invoke(() =>
+        Func<System.Windows.Media.Imaging.BitmapSource?> func = () =>
         {
             try
             {
@@ -714,7 +723,9 @@ public partial class MainWindow : Window
             {
                 return null;
             }
-        });
+        };
+
+        return CheckAccess() ? func() : Dispatcher.Invoke(func);
     }
 
     protected override async void OnPreviewKeyDown(KeyEventArgs e)
@@ -747,24 +758,30 @@ public partial class MainWindow : Window
 
     public void ShowIconPickerModal()
     {
-        Dispatcher.Invoke(() =>
+        Action act = () =>
         {
             Show();
             if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
             Activate();
             if (IconPickerModal != null) IconPickerModal.Visibility = Visibility.Visible;
-        });
+        };
+
+        if (CheckAccess()) act();
+        else Core.Bridge.UiBridge.Instance.Post(act);
     }
 
     public void ShowInstalledAppsModal()
     {
-        Dispatcher.Invoke(() =>
+        Action act = () =>
         {
             Show();
             if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
             Activate();
             if (InstalledAppsModal != null) InstalledAppsModal.Visibility = Visibility.Visible;
-        });
+        };
+
+        if (CheckAccess()) act();
+        else Core.Bridge.UiBridge.Instance.Post(act);
     }
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e)
@@ -2625,7 +2642,7 @@ public partial class MainWindow : Window
                     _clockWidget.PositionChanged += OnClockWidgetPositionChanged;
                     _clockWidget.WidgetClosed += (s, ev) =>
                     {
-                        Dispatcher.Invoke(() =>
+                        Core.Bridge.UiBridge.Instance.Post(() =>
                         {
                             if (_overviewViewModel != null)
                                 _overviewViewModel.IsClockActive = false;
@@ -2718,17 +2735,17 @@ public partial class MainWindow : Window
         if (_cpuWidget == null)
         {
             _cpuWidget = new DesktopCpuWidget();
-            _cpuWidget.WidgetClosed += (s, ev) => Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+            _cpuWidget.WidgetClosed += (s, ev) => Core.Bridge.UiBridge.Instance.Post(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
         }
         if (_gpuWidget == null)
         {
             _gpuWidget = new DesktopGpuWidget();
-            _gpuWidget.WidgetClosed += (s, ev) => Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+            _gpuWidget.WidgetClosed += (s, ev) => Core.Bridge.UiBridge.Instance.Post(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
         }
         if (_ramWidget == null)
         {
             _ramWidget = new DesktopRamWidget();
-            _ramWidget.WidgetClosed += (s, ev) => Dispatcher.Invoke(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
+            _ramWidget.WidgetClosed += (s, ev) => Core.Bridge.UiBridge.Instance.Post(() => { if (_overviewViewModel != null) _overviewViewModel.IsGaugesActive = false; });
         }
     }
 
