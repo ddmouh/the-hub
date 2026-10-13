@@ -51,7 +51,7 @@ public partial class MainWindow : Window
 
     private readonly CoreHubManager _core;
     private readonly RadialWindow _radialWindow;
-    private readonly DynamicIslandWindow _islandWindow;
+    private readonly IslandModule _islandModule;
     private readonly WallpaperManager _wallpaperManager;
     private DesktopClockWidget? _clockWidget;
     // Split hardware widgets (Section 2.3) — independent windows, same DesktopWidgetBase pattern as clock
@@ -98,7 +98,7 @@ public partial class MainWindow : Window
 
         _core = new CoreHubManager();
         _radialWindow = new RadialWindow();
-        _islandWindow = new DynamicIslandWindow();
+        _islandModule = new IslandModule();
         _wallpaperManager = new WallpaperManager();
         _trayService = new TrayIconService();
 
@@ -114,7 +114,7 @@ public partial class MainWindow : Window
         });
 
         // Dynamic Island Open Settings wiring
-        _islandWindow.OpenSettingsRequested += () => Dispatcher.BeginInvoke(() =>
+        _islandModule.OpenSettingsRequested += () => Dispatcher.BeginInvoke(() =>
         {
             Show();
             if (WindowState == WindowState.Minimized)
@@ -133,17 +133,7 @@ public partial class MainWindow : Window
             _radialWindow.ShowAt(pt.x, pt.y);
         });
 
-        _trayService.ToggleIslandRequested += (show) => Dispatcher.BeginInvoke(() =>
-        {
-            if (show)
-            {
-                _islandWindow.Show();
-            }
-            else
-            {
-                _islandWindow.Hide();
-            }
-        });
+        _trayService.ToggleIslandRequested += (show) => _islandModule.ToggleVisibility(show);
 
         _trayService.ExitRequested += () => Dispatcher.BeginInvoke(() =>
         {
@@ -237,7 +227,7 @@ public partial class MainWindow : Window
                 {
                     if (SettingsManager.Current.IslandHideOnFullscreen)
                     {
-                        _islandWindow.Hide();
+                        _islandModule.ToggleVisibility(false);
                     }
                     if (SettingsManager.Current.WallpaperPauseOnFullscreen)
                     {
@@ -248,8 +238,7 @@ public partial class MainWindow : Window
                 {
                     if (SettingsManager.Current.DynamicIslandEnabled)
                     {
-                        _islandWindow.PositionWindow();
-                        _islandWindow.Show();
+                        _islandModule.ToggleVisibility(true);
                     }
                     if (SettingsManager.Current.WallpaperPauseOnFullscreen)
                     {
@@ -271,14 +260,14 @@ public partial class MainWindow : Window
 
             if (SettingsManager.Current.DynamicIslandEnabled)
             {
-                _islandWindow.Show();
+                _islandModule.ToggleVisibility(true);
             }
-            _islandWindow.PostEvent(evt);
+            _islandModule.PostEvent(evt);
         });
 
-        _islandWindow.PlayPauseRequested += async () => await _core.MediaPlayPauseAsync();
-        _islandWindow.NextRequested += async () => await _core.MediaNextAsync();
-        _islandWindow.PrevRequested += async () => await _core.MediaPrevAsync();
+        _islandModule.PlayPauseRequested += async () => await _core.MediaPlayPauseAsync();
+        _islandModule.NextRequested += async () => await _core.MediaNextAsync();
+        _islandModule.PrevRequested += async () => await _core.MediaPrevAsync();
 
         // RAM update timer
         _ramTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
@@ -431,13 +420,8 @@ public partial class MainWindow : Window
                 SetClockWidgetState(_overviewViewModel.IsClockActive);
             }
 
-            _core.AmbientStatusChanged += status => _islandWindow.SetAmbientStatus(status);
-
-            AppLogger.Log("Showing Dynamic Island window");
-            _islandWindow.PositionWindow();
-            _islandWindow.Show();
-            // Populate the Workspaces Quick Launcher with the current workspace list
-            _islandWindow.SetWorkspaces(SettingsManager.Current.Workspaces);
+            AppLogger.Log("Starting Dynamic Island Module");
+            await _islandModule.StartAsync();
 
             AppLogger.Log("Starting Core Hub Manager");
             await _core.StartAsync();
@@ -587,7 +571,7 @@ public partial class MainWindow : Window
             }
             else if (pageIndex == 3)
             {
-                _islandWindow.Show();
+                _islandModule.ToggleVisibility(true);
             }
         });
     }
@@ -1550,7 +1534,7 @@ public partial class MainWindow : Window
         OpenWorkspaceDetail(newWs);
 
         // Keep the Dynamic Island workspace launcher in sync
-        _islandWindow.SetWorkspaces(SettingsManager.Current.Workspaces);
+        _islandModule.SetWorkspaces(SettingsManager.Current.Workspaces);
 
         _core.TriggerIslandEvent(new DynamicIslandEvent
         {
@@ -1679,7 +1663,7 @@ public partial class MainWindow : Window
 
                 RefreshWorkspacesList();
                 // Keep the Dynamic Island workspace launcher in sync
-                _islandWindow.SetWorkspaces(SettingsManager.Current.Workspaces);
+                _islandModule.SetWorkspaces(SettingsManager.Current.Workspaces);
 
                 _core.TriggerIslandEvent(new DynamicIslandEvent
                 {
@@ -2146,18 +2130,17 @@ public partial class MainWindow : Window
         settings.IslandShowBrightnessControl = ChkShowBrightness?.IsChecked ?? true;
         SettingsManager.SaveSettings(settings);
 
-        _islandWindow?.PositionWindow();
-        _islandWindow?.UpdateLayoutSettings();
+        _islandModule?.UpdateLayout();
 
         if (sender == ChkShowQuickControls || sender == ChkShowMicMute || sender == ChkShowBrightness)
         {
-            _islandWindow?.ShowSettingsPreview();
+            _islandModule?.ShowSettingsPreview();
         }
     }
 
     private void OnPreviewIslandClick(object sender, RoutedEventArgs e)
     {
-        _islandWindow?.ShowSettingsPreview();
+        _islandModule?.ShowSettingsPreview();
     }
 
     private void OnIslandScaleChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -2167,7 +2150,7 @@ public partial class MainWindow : Window
         settings.IslandScale = Math.Round(SldIslandScale.Value, 2);
         TxtScaleValue.Text = $"{(int)Math.Round(settings.IslandScale * 100)}%";
         SettingsManager.SaveSettings(settings);
-        _islandWindow?.PositionWindow();
+        _islandModule?.UpdateLayout();
     }
 
     private void OnIslandTopChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -2181,12 +2164,12 @@ public partial class MainWindow : Window
             settings.IslandCustomY = settings.IslandTopOffset;
         }
         SettingsManager.SaveSettings(settings);
-        _islandWindow?.PositionWindow();
+        _islandModule?.UpdateLayout();
     }
 
     private void OnResetIslandPositionClick(object sender, RoutedEventArgs e)
     {
-        _islandWindow?.ResetPositionToCenter();
+        _islandModule?.ResetPositionToCenter();
         _core.TriggerIslandEvent(new DynamicIslandEvent
         {
             Type = IslandEventType.SystemAlert,
@@ -2207,7 +2190,7 @@ public partial class MainWindow : Window
             settings.IslandMonitorIndex = CmbIslandMonitor.SelectedIndex;
             SettingsManager.SaveSettings(settings);
 
-            _islandWindow.PositionWindow();
+            _islandModule?.UpdateLayout();
 
             _core.TriggerIslandEvent(new DynamicIslandEvent
             {
@@ -2239,7 +2222,7 @@ public partial class MainWindow : Window
             AppLogger.Log("Registered USB device notification for MainWindow HWND");
 
             // Pass Island HWND to FullscreenDetector for screen-aware isolation
-            var islandHwnd = new System.Windows.Interop.WindowInteropHelper(_islandWindow).EnsureHandle();
+            var islandHwnd = _islandModule.GetWindowHandle();
             _core.SetIslandWindowHandle(islandHwnd);
             AppLogger.Log("Passed island HWND to FullscreenDetector");
         }
@@ -2305,7 +2288,7 @@ public partial class MainWindow : Window
         // 1. Instantly hide windows so user immediately sees everything disappear
         try { Hide(); } catch { }
         try { _radialWindow?.Hide(); } catch { }
-        try { _islandWindow?.Hide(); } catch { }
+        try { _islandModule?.ToggleVisibility(false); } catch { }
         try { _clockWidget?.Hide(); } catch { }
 
         // 2. Stop timers
@@ -2317,7 +2300,7 @@ public partial class MainWindow : Window
 
         // 4. Close windows
         try { _radialWindow?.Close(); } catch { }
-        try { _islandWindow?.Close(); } catch { }
+        try { _islandModule?.Dispose(); } catch { }
         try { _clockWidget?.Close(); } catch { }
         try { _wallpaperManager?.DisposeWallpapers(); } catch { }
 
@@ -2394,9 +2377,9 @@ public partial class MainWindow : Window
     {
         try
         {
-            if (_islandWindow != null && config != null && !string.IsNullOrWhiteSpace(config.DynamicIslandFontFamily))
+            if (_islandModule != null && config != null && !string.IsNullOrWhiteSpace(config.DynamicIslandFontFamily))
             {
-                _islandWindow.FontFamily = CustomFontService.ResolveFontFamily(config.DynamicIslandFontFamily);
+                _islandModule.SetFontFamily(CustomFontService.ResolveFontFamily(config.DynamicIslandFontFamily));
             }
         }
         catch (Exception ex)

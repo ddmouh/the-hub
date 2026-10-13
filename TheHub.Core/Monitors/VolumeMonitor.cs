@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using TheHub.Common.Config;
 using TheHub.Common.Models;
+using TheHub.Core.Bus;
 using TheHub.Core.Native;
 
 namespace TheHub.Core.Monitors;
@@ -8,6 +9,7 @@ namespace TheHub.Core.Monitors;
 public class VolumeMonitor : IDisposable
 {
     private readonly System.Threading.Timer _pollingTimer;
+    private readonly IHubBus _bus;
     private int _lastVolume = -1;
     private bool _lastMute;
     private bool _isInitialized;
@@ -16,8 +18,9 @@ public class VolumeMonitor : IDisposable
 
     public event Action<DynamicIslandEvent>? VolumeEventOccurred;
 
-    public VolumeMonitor()
+    public VolumeMonitor(IHubBus? bus = null)
     {
+        _bus = bus ?? HubBus.Default;
         _pollingTimer = new System.Threading.Timer(CheckVolumeState, null, Timeout.Infinite, Timeout.Infinite);
     }
 
@@ -130,6 +133,8 @@ public class VolumeMonitor : IDisposable
 
         _lastVolume = volume;
         _lastMute = isMuted;
+
+        _bus.Publish(new VolumeChanged(volume, isMuted));
 
         string glyph = isMuted ? "🔇" : (volume == 0 ? "🔈" : (volume > 50 ? "🔊" : "🔉"));
         string subtitle = isMuted ? "Muted" : $"{volume}%";

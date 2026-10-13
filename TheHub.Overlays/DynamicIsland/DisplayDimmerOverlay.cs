@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using TheHub.Core.Bridge;
 using TheHub.Core.Native;
 
 namespace TheHub.Overlays.DynamicIsland;
@@ -65,7 +66,7 @@ public class DisplayDimmerOverlay : Window
 
     public void SetBrightness(int brightnessPercent, MonitorItem? targetMonitor = null, Window? topWindowToPreserve = null)
     {
-        Dispatcher.Invoke(() =>
+        _ = UiBridge.Instance.InvokeAsync(() =>
         {
             brightnessPercent = Math.Clamp(brightnessPercent, 10, 100);
             if (brightnessPercent >= 99)

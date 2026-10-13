@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using TheHub.Core.Native;
 
@@ -11,6 +12,7 @@ namespace TheHub.Core.Services;
 /// <summary>
 /// High-performance, thread-safe asynchronous Windows CoreAudio service.
 /// Interacts directly with IMMDeviceEnumerator, IAudioEndpointVolume, and IPolicyConfig COM interfaces.
+/// Routes all COM calls through a dedicated single-reader background queue to avoid COM contention.
 /// </summary>
 public interface IAudioService
 {
@@ -30,9 +32,79 @@ public class AudioService : IAudioService
 {
     private static readonly Guid IID_IAudioEndpointVolume = typeof(IAudioEndpointVolume).GUID;
 
+    private readonly Channel<Func<Task>> _channel;
+
+    public AudioService()
+    {
+        _channel = Channel.CreateUnbounded<Func<Task>>(new UnboundedChannelOptions
+        {
+            SingleReader = true,
+            SingleWriter = false
+        });
+
+        Task.Run(ProcessQueueAsync);
+    }
+
+    private async Task ProcessQueueAsync()
+    {
+        var reader = _channel.Reader;
+        while (await reader.WaitToReadAsync().ConfigureAwait(false))
+        {
+            while (reader.TryRead(out var workItem))
+            {
+                try
+                {
+                    await workItem().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[AudioService Queue] Exception: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    private Task<T> EnqueueAsync<T>(Func<T> func)
+    {
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _channel.Writer.TryWrite(() =>
+        {
+            try
+            {
+                var result = func();
+                tcs.SetResult(result);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+            return Task.CompletedTask;
+        });
+        return tcs.Task;
+    }
+
+    private Task EnqueueAsync(Action action)
+    {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _channel.Writer.TryWrite(() =>
+        {
+            try
+            {
+                action();
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+            return Task.CompletedTask;
+        });
+        return tcs.Task;
+    }
+
     public Task<(int Volume, bool IsMuted)> GetMasterVolumeStateAsync()
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -55,7 +127,7 @@ public class AudioService : IAudioService
 
     public Task SetMasterVolumeAsync(int volumePercent)
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -77,7 +149,7 @@ public class AudioService : IAudioService
 
     public Task<(int Volume, bool IsMuted)> ToggleMasterMuteAsync()
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -104,7 +176,7 @@ public class AudioService : IAudioService
 
     public Task<bool> GetMicrophoneMuteStateAsync()
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -125,7 +197,7 @@ public class AudioService : IAudioService
 
     public Task<bool> ToggleMicrophoneMuteAsync()
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -149,7 +221,7 @@ public class AudioService : IAudioService
 
     public Task<bool> SetMicrophoneMuteAsync(bool isMuted)
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -171,7 +243,7 @@ public class AudioService : IAudioService
 
     public Task<(bool MasterMuted, bool MicMuted)> SetDeafenAsync(bool isDeafened)
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             try
             {
@@ -196,17 +268,17 @@ public class AudioService : IAudioService
 
     public Task<IReadOnlyList<AudioDeviceInfo>> GetPlaybackDevicesAsync()
     {
-        return Task.Run<IReadOnlyList<AudioDeviceInfo>>(() => AudioDeviceManager.GetPlaybackDevices());
+        return EnqueueAsync<IReadOnlyList<AudioDeviceInfo>>(() => AudioDeviceManager.GetPlaybackDevices());
     }
 
     public Task<IReadOnlyList<AudioDeviceInfo>> GetRecordingDevicesAsync()
     {
-        return Task.Run<IReadOnlyList<AudioDeviceInfo>>(() => AudioDeviceManager.GetRecordingDevices());
+        return EnqueueAsync<IReadOnlyList<AudioDeviceInfo>>(() => AudioDeviceManager.GetRecordingDevices());
     }
 
     public Task<bool> SetDefaultDeviceAsync(string deviceId, bool isCapture = false)
     {
-        return Task.Run(() =>
+        return EnqueueAsync(() =>
         {
             if (string.IsNullOrWhiteSpace(deviceId)) return false;
             bool ok = AudioDeviceManager.SetDefaultDevice(deviceId);

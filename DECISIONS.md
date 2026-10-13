@@ -18,4 +18,11 @@
 | 2026-10-13 | P1.7: Section Settings Split | Created SectionSettingsStore with atomic writes, migration, and section corruption isolation |
 | 2026-10-13 | P1.8: Core UI Controls | Implemented SectionHeader, SettingRow, HubButton variants, HubToggle, and HubCard |
 | 2026-10-13 | P1.9: Shell Header Fix | Eliminated column collision bug by using responsive WrapPanel in toolbar headers |
+| 2026-10-13 | P2.1: IslandModule | Implemented IHubModule, decoupled DynamicIslandWindow from MainWindow.xaml.cs via UiBridge |
+| 2026-10-13 | P2.2: IslandStateMachine | Pure C# state machine with priority preemption, timers, and persistent data restoration |
+| 2026-10-13 | P2.3: Monitors to HubBus | Volume, Media, Clipboard, and ActiveApp publish to bus; AudioService serial COM queue |
+| 2026-10-13 | P2.4: Zero Island Blocking | Replaced Dispatcher.Invoke in Island and DisplayDimmerOverlay; fully async COM calls |
+| 2026-10-13 | P2.5/P2.6: Island Spring Morph | Capsule morphing driven by pure physics SpringAnimator engine with snappy curve |
+| 2026-10-13 | P2.7: Event Services | Implemented UsbWatcher, DownloadWatcher, PrayerTimeService, and PomodoroService |
+| 2026-10-13 | Gate P2: Interaction Stress | 50 volume, 20 media, 30 morph, and USB events executed with zero watchdog violations |
 

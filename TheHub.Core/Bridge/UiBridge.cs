@@ -56,6 +56,47 @@ public class UiBridge
     }
 
     /// <summary>
+    /// Invokes a UI action asynchronously and returns a Task that completes when the action finishes.
+    /// </summary>
+    public Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
+    {
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _dispatcher.InvokeAsync(() =>
+        {
+            try
+            {
+                action();
+                tcs.SetResult();
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        }, priority);
+        return tcs.Task;
+    }
+
+    /// <summary>
+    /// Invokes a UI function asynchronously and returns a Task with the result.
+    /// </summary>
+    public Task<T> InvokeAsync<T>(Func<T> func, DispatcherPriority priority = DispatcherPriority.Normal)
+    {
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _dispatcher.InvokeAsync(() =>
+        {
+            try
+            {
+                tcs.SetResult(func());
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        }, priority);
+        return tcs.Task;
+    }
+
+    /// <summary>
     /// Posts a high-frequency action (e.g. volume slider, media progress).
     /// If multiple calls occur before the UI thread executes, only the latest action for the key runs.
     /// </summary>

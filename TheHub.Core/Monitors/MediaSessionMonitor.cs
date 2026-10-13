@@ -1,5 +1,6 @@
 using Windows.Media.Control;
 using TheHub.Common.Models;
+using TheHub.Core.Bus;
 
 namespace TheHub.Core.Monitors;
 
@@ -8,12 +9,14 @@ public class MediaSessionMonitor : IDisposable
     private GlobalSystemMediaTransportControlsSessionManager? _sessionManager;
     private GlobalSystemMediaTransportControlsSession? _currentSession;
     private readonly System.Threading.Timer _refreshTimer;
+    private readonly IHubBus _bus;
     private string? _lastBroadcastTrack;
 
     public event Action<DynamicIslandEvent>? MediaEventOccurred;
 
-    public MediaSessionMonitor()
+    public MediaSessionMonitor(IHubBus? bus = null)
     {
+        _bus = bus ?? HubBus.Default;
         _refreshTimer = new System.Threading.Timer(OnPeriodicCheck, null, Timeout.Infinite, Timeout.Infinite);
     }
 
@@ -106,6 +109,13 @@ public class MediaSessionMonitor : IDisposable
                 string trackSignature = $"{props.Title}_{props.Artist}_{isPlaying}";
                 if (trackSignature == _lastBroadcastTrack) return;
                 _lastBroadcastTrack = trackSignature;
+
+                _bus.Publish(new MediaChanged(
+                    Title: props.Title,
+                    Artist: props.Artist,
+                    IsPlaying: isPlaying,
+                    Glyph: "🎵"
+                ));
 
                 var evt = new DynamicIslandEvent
                 {

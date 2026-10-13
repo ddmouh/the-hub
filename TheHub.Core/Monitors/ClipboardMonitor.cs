@@ -2,9 +2,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Threading;
 using TheHub.Common.Config;
 using TheHub.Common.Models;
+using TheHub.Core.Bridge;
+using TheHub.Core.Bus;
 using TheHub.Core.Native;
 
 namespace TheHub.Core.Monitors;
@@ -17,8 +18,16 @@ public class ClipboardMonitor : IDisposable
     private DateTime _lastCopyTime = DateTime.MinValue;
     private bool _isListening;
     private readonly object _lock = new();
+    private readonly IHubBus _bus;
+    private readonly UiBridge _uiBridge;
 
     public event Action<DynamicIslandEvent>? ClipboardEventOccurred;
+
+    public ClipboardMonitor(IHubBus? bus = null, UiBridge? uiBridge = null)
+    {
+        _bus = bus ?? HubBus.Default;
+        _uiBridge = uiBridge ?? UiBridge.Instance;
+    }
 
     public void Start(IntPtr hwnd)
     {
@@ -81,11 +90,7 @@ public class ClipboardMonitor : IDisposable
 
         try
         {
-            var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
-            if (dispatcher != null)
-            {
-                dispatcher.Invoke(() => ProcessClipboardData());
-            }
+            await _uiBridge.InvokeAsync(() => ProcessClipboardData());
         }
         catch
         {
@@ -114,6 +119,8 @@ public class ClipboardMonitor : IDisposable
                     string singleLine = text.Replace("\r", "").Replace("\n", " ").Trim();
                     if (singleLine.Length > 45)
                         singleLine = singleLine.Substring(0, 42) + "...";
+
+                    _bus.Publish(new ClipboardChanged(singleLine));
 
                     ClipboardEventOccurred?.Invoke(new DynamicIslandEvent
                     {

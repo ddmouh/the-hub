@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using TheHub.Common.Config;
+using TheHub.Core.Bus;
 using TheHub.Core.Native;
 
 namespace TheHub.Core.Monitors;
@@ -10,13 +11,15 @@ public record AmbientStatusInfo(string Glyph, string Title, string Subtitle, str
 public class ActiveAppMonitor : IDisposable
 {
     private readonly System.Threading.Timer _timer;
+    private readonly IHubBus _bus;
     private string _lastSignature = "";
 
     public event Action<AmbientStatusInfo>? AmbientStatusChanged;
     public AmbientStatusInfo CurrentStatus { get; private set; } = new("⚡", "The Hub", "Companion Ready", "System");
 
-    public ActiveAppMonitor()
+    public ActiveAppMonitor(IHubBus? bus = null)
     {
+        _bus = bus ?? HubBus.Default;
         _timer = new System.Threading.Timer(OnTick, null, Timeout.Infinite, Timeout.Infinite);
     }
 
@@ -63,6 +66,8 @@ public class ActiveAppMonitor : IDisposable
             string signature = $"{processName}::{title}";
             if (signature == _lastSignature) return;
             _lastSignature = signature;
+
+            _bus.Publish(new ActiveAppChanged(processName, title));
 
             var status = ClassifyWindow(processName, title);
             CurrentStatus = status;

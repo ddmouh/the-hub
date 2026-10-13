@@ -10,6 +10,8 @@ namespace TheHub.Core.Bus;
 /// </summary>
 public class HubBus : IHubBus
 {
+    public static HubBus Default { get; } = new();
+
     private readonly Channel<IHubEvent> _channel;
     private readonly ConcurrentDictionary<Type, List<Delegate>> _subscriptions = new();
     private readonly object _subLock = new();

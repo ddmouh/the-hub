@@ -11,6 +11,7 @@ using TheHub.Common.Models;
 using TheHub.Core.Monitors;
 using TheHub.Core.Native;
 using TheHub.Core.Services;
+using TheHub.Design.Motion;
 
 namespace TheHub.Overlays.DynamicIsland;
 
@@ -368,23 +369,23 @@ public partial class DynamicIslandWindow : Window
         _collapseTimer.Start();
     }
 
-    private void SyncSlidersWithSystem()
+    private async void SyncSlidersWithSystem()
     {
         try
         {
             _isInternalSliderUpdating = true;
 
-            var (vol, isMuted) = SystemControlHelper.GetMasterAudioState();
+            var (vol, isMuted) = await _audioService.GetMasterVolumeStateAsync();
             if (vol > 0) _savedDeafenVolume = vol;
             SldVolume.Value = vol;
             TxtVolumePercent.Text = isMuted ? $"{vol}% (Muted)" : $"{vol}%";
             BtnAudioMute.Content = isMuted ? "🔇" : (vol > 65 ? "🔊" : (vol > 30 ? "🔉" : "🔈"));
 
-            int brightness = SystemControlHelper.GetScreenBrightness();
+            int brightness = await _brightnessService.GetBrightnessAsync();
             SldBrightness.Value = brightness;
             TxtBrightnessPercent.Text = $"{brightness}%";
 
-            bool micMuted = SystemControlHelper.GetMicrophoneMuteState();
+            bool micMuted = await _audioService.GetMicrophoneMuteStateAsync();
             UpdateMicButtonVisual(micMuted);
             UpdateDeafenButtonVisual(isMuted);
         }
@@ -680,7 +681,7 @@ public partial class DynamicIslandWindow : Window
 
         UpdateDeafenButtonVisual(_isDeafened);
 
-        var (vol, _) = SystemControlHelper.GetMasterAudioState();
+        var (vol, _) = await _audioService.GetMasterVolumeStateAsync();
         if (vol > 0 && _isDeafened)
         {
             _savedDeafenVolume = vol;
@@ -737,15 +738,17 @@ public partial class DynamicIslandWindow : Window
 
     private void AnimateContainer(double fromW, double toW, double fromH, double toH, double fromR, double toR)
     {
-        var duration = TimeSpan.FromMilliseconds(160);
-        var ease = new QuadraticEase { EasingMode = EasingMode.EaseOut };
+        var config = SpringConfig.Snappy;
+        IslandContainer.BeginAnimation(WidthProperty, null);
+        IslandContainer.BeginAnimation(HeightProperty, null);
 
-        var animW = new DoubleAnimation(fromW, toW, duration) { EasingFunction = ease };
-        var animH = new DoubleAnimation(fromH, toH, duration) { EasingFunction = ease };
+        SpringAnimator.AnimateValue($"island_w_{GetHashCode()}", fromW, toW, config, w => IslandContainer.Width = Math.Max(20, w));
+        SpringAnimator.AnimateValue($"island_h_{GetHashCode()}", fromH, toH, config, h => IslandContainer.Height = Math.Max(20, h));
+        SpringAnimator.AnimateValue($"island_r_{GetHashCode()}", fromR, toR, config, r => IslandContainer.CornerRadius = new CornerRadius(Math.Max(0, r)));
 
-        IslandContainer.BeginAnimation(WidthProperty, animW);
-        IslandContainer.BeginAnimation(HeightProperty, animH);
-        IslandContainer.CornerRadius = new CornerRadius(fromR);
+
+
+
     }
 
     private void SetCompactState(bool animated)
