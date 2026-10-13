@@ -40,6 +40,11 @@
 | 2026-10-13 | P5.2: WorkspaceModule | Implemented IHubModule managing atomic workspace transitions and broadcasting WorkspaceChanged to HubBus |
 | 2026-10-13 | P5.3/P5.4: Workspace Studio UI | Added Capture Current Desktop button, island coordination, and multi-profile linkage |
 | 2026-10-13 | Gate P5: Tests & Verification | 100/100 solution tests passing; verified atomic plan generation, isolation rules, and snapshot filters |
+| 2026-10-13 | P6.1: Widget Snap Engine | Pure WidgetSnapEngine with 16px magnetic screen-edge snap, inter-widget alignment, and grid snapping |
+| 2026-10-13 | P6.2: WidgetsModule & Power Policy | Implemented IHubModule coordinating desktop widgets with automatic polling suspension on Fullscreen/Battery |
+| 2026-10-13 | P6.3: Polling Suspension Virtuals | Added PausePolling() / ResumePolling() across DesktopWidgetBase and all hardware widgets |
+| 2026-10-13 | P6.4: UiBridge STA Support | Enhanced WpfUiDispatcher to execute on STA threads in headless/testing environments without WPF pump |
+| 2026-10-13 | Gate P6: Tests & Verification | 105/105 solution tests passing; verified magnetic edge snap, alignment, and module power lifecycle |
 
 
 

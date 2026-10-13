@@ -165,4 +165,12 @@ public class DesktopWidgetBase : Window
         WidgetClosed?.Invoke(this, EventArgs.Empty);
         Hide();
     }
+
+    public virtual void PausePolling()
+    {
+    }
+
+    public virtual void ResumePolling()
+    {
+    }
 }

@@ -386,4 +386,17 @@ public partial class DesktopClockWidget : DesktopWidgetBase
     {
         CloseWidget();
     }
+
+    public override void PausePolling()
+    {
+        _timer?.Stop();
+    }
+
+    public override void ResumePolling()
+    {
+        if (IsVisible)
+        {
+            _timer?.Start();
+        }
+    }
 }

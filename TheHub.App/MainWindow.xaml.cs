@@ -65,6 +65,8 @@ public partial class MainWindow : Window
     public WallpaperModule WallpaperModule => _wallpaperModule;
     private readonly WorkspaceModule _workspaceModule;
     public WorkspaceModule WorkspaceModule => _workspaceModule;
+    private readonly WidgetsModule _widgetsModule;
+    public WidgetsModule WidgetsModule => _widgetsModule;
     private readonly DispatcherTimer _ramTimer;
     private readonly TrayIconService _trayService;
     private WorkspaceConfig? _selectedWorkspace;
@@ -106,6 +108,7 @@ public partial class MainWindow : Window
         _wallpaperManager = new WallpaperManager();
         _wallpaperModule = new WallpaperModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance, _wallpaperManager);
         _workspaceModule = new WorkspaceModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
+        _widgetsModule = new WidgetsModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
         _trayService = new TrayIconService();
 
         // Tray Icon event wiring
@@ -434,6 +437,9 @@ public partial class MainWindow : Window
 
             AppLogger.Log("Starting Workspace Module");
             await _workspaceModule.StartAsync();
+
+            AppLogger.Log("Starting Widgets Module");
+            await _widgetsModule.StartAsync();
 
             AppLogger.Log("Starting Core Hub Manager");
             await _core.StartAsync();
@@ -2357,6 +2363,7 @@ public partial class MainWindow : Window
         try { _clockWidget?.Close(); } catch { }
         try { _wallpaperModule?.Dispose(); } catch { }
         try { _workspaceModule?.Dispose(); } catch { }
+        try { _widgetsModule?.Dispose(); } catch { }
         try { _wallpaperManager?.DisposeWallpapers(); } catch { }
 
         // 5. Unhook keyboard/mouse hooks and close IPC

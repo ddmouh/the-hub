@@ -49,4 +49,17 @@ public partial class DesktopGpuWidget : DesktopWidgetBase
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => CloseWidget();
+
+    public override void PausePolling()
+    {
+        _timer?.Stop();
+    }
+
+    public override void ResumePolling()
+    {
+        if (IsVisible)
+        {
+            _timer?.Start();
+        }
+    }
 }

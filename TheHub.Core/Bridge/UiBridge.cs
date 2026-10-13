@@ -27,7 +27,14 @@ public class WpfUiDispatcher : IUiDispatcher
         else
         {
             // Headless / unit testing environment without active WPF Application pump
-            Task.Run(action);
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            {
+                action();
+            }
+            else
+            {
+                Task.Run(action);
+            }
         }
     }
 }

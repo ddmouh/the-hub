@@ -98,6 +98,13 @@ public class AppSettings
     public string? GlobalFontFamily { get; set; }
     public List<string> CustomFonts { get; set; } = new();
 
+    // Desktop Widgets
+    public bool ShowClockWidget { get; set; } = true;
+    public bool ShowCpuWidget { get; set; } = true;
+    public bool ShowGpuWidget { get; set; } = true;
+    public bool ShowRamWidget { get; set; } = true;
+    public double WidgetsOpacity { get; set; } = 90.0;
+
     public static AppSettings CreateDefault()
     {
         var settings = new AppSettings();

@@ -217,7 +217,14 @@ public class SectionSettingsStore
                 SaveSectionAtomic("workspaces.json", wsSec);
 
                 // Populate WidgetsSection
-                var widgetSec = new WidgetsSection();
+                var widgetSec = new WidgetsSection
+                {
+                    ShowClockWidget = legacy.ShowClockWidget,
+                    ShowCpuWidget = legacy.ShowCpuWidget,
+                    ShowGpuWidget = legacy.ShowGpuWidget,
+                    ShowRamWidget = legacy.ShowRamWidget,
+                    Opacity = legacy.WidgetsOpacity / 100.0
+                };
                 SaveSectionAtomic("widgets.json", widgetSec);
 
                 // Populate AssistantSection
