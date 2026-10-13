@@ -32,6 +32,12 @@ public class WallpaperItem : INotifyPropertyChanged
     [System.Text.Json.Serialization.JsonIgnore]
     public string StatusBackground => IsActive ? "#065F46" : "#27272A";
 
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsMissingFile => !string.IsNullOrWhiteSpace(FilePath) && !System.IO.File.Exists(FilePath);
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string WarningBadgeText => IsMissingFile ? "⚠️ MISSING FILE" : "";
+
     public event PropertyChangedEventHandler? PropertyChanged;
     public void NotifyStateChanged()
     {
@@ -39,5 +45,7 @@ public class WallpaperItem : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CardBorderBrush)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusText)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusBackground)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMissingFile)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WarningBadgeText)));
     }
 }

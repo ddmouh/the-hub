@@ -8,13 +8,12 @@ using FlyleafLib.MediaPlayer;
 using TheHub.Common.Config;
 using TheHub.Core.Native;
 using TheHub.Core.Services;
+using TheHub.Core.Bridge;
 
 namespace TheHub.Overlays.Wallpaper;
 
 public partial class LiveWallpaperWindow : Window
 {
-    private static bool _engineStarted;
-    private static readonly object _engineLock = new();
 
     private IntPtr _hwnd = IntPtr.Zero;
     private bool _isAttached = false;
@@ -36,31 +35,7 @@ public partial class LiveWallpaperWindow : Window
 
     public static void EnsureFlyleafEngineStarted()
     {
-        if (_engineStarted) return;
-        lock (_engineLock)
-        {
-            if (_engineStarted) return;
-            try
-            {
-                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string ffmpegDir = Path.Combine(baseDir, "FFmpeg");
-                string path = Directory.Exists(ffmpegDir) && File.Exists(Path.Combine(ffmpegDir, "avcodec-63.dll"))
-                    ? ffmpegDir
-                    : baseDir;
-
-                Engine.Start(new EngineConfig
-                {
-                    FFmpegPath = path,
-                    UIRefreshInterval = 1000 / 60
-                });
-                _engineStarted = true;
-                AppLogger.Log($"[WallpaperEngine] Flyleaf Engine started successfully (FFmpegPath: '{path}')");
-            }
-            catch (Exception ex)
-            {
-                AppLogger.Log($"[WallpaperEngine] Flyleaf Engine initialization exception: {ex.Message}");
-            }
-        }
+        WallpaperEngine.EnsureEngineStarted();
     }
 
     public LiveWallpaperWindow(MonitorItem monitor)
@@ -204,7 +179,7 @@ public partial class LiveWallpaperWindow : Window
 
             Player.OpenCompleted += (s, e) =>
             {
-                Dispatcher.BeginInvoke(() =>
+                UiBridge.Instance.Post(() =>
                 {
                     if (e.Error != null)
                     {
@@ -218,6 +193,7 @@ public partial class LiveWallpaperWindow : Window
                     {
                         _isPlaying = true;
                         _isPaused = false;
+                        WallpaperEngine.IncrementActivePlayers();
                         AppLogger.Log($"[WallpaperEngine] Flyleaf playing video successfully on '{DeviceName}'");
                         _ = Task.Delay(1500).ContinueWith(_ => MemoryOptimizer.TrimMemory());
                     }
@@ -302,7 +278,7 @@ public partial class LiveWallpaperWindow : Window
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.BeginInvoke(() => SetFitMode(fitMode));
+            UiBridge.Instance.Post(() => SetFitMode(fitMode));
             return;
         }
 
@@ -328,6 +304,8 @@ public partial class LiveWallpaperWindow : Window
             "fit" => AspectRatio.Keep,
             "stretch" => AspectRatio.Custom,
             "fill" => AspectRatio.Fill,
+            "center" => AspectRatio.Keep,
+            "span" => AspectRatio.Fill,
             _ => AspectRatio.Fill
         };
     }
@@ -336,7 +314,7 @@ public partial class LiveWallpaperWindow : Window
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.BeginInvoke(Pause);
+            UiBridge.Instance.Post(Pause);
             return;
         }
 
@@ -352,7 +330,7 @@ public partial class LiveWallpaperWindow : Window
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.BeginInvoke(Resume);
+            UiBridge.Instance.Post(Resume);
             return;
         }
 
@@ -368,7 +346,7 @@ public partial class LiveWallpaperWindow : Window
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.BeginInvoke(() => SetBatteryPaused(paused));
+            UiBridge.Instance.Post(() => SetBatteryPaused(paused));
             return;
         }
 
@@ -387,7 +365,7 @@ public partial class LiveWallpaperWindow : Window
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.BeginInvoke(() => SetCoveragePaused(paused));
+            UiBridge.Instance.Post(() => SetCoveragePaused(paused));
             return;
         }
 
@@ -430,6 +408,7 @@ public partial class LiveWallpaperWindow : Window
                     AppLogger.Log($"Flyleaf Player dispose error: {pEx.Message}");
                 }
                 Player = null;
+                WallpaperEngine.DecrementActivePlayers();
             }
 
             // 2. Detach window from WorkerW by unparenting

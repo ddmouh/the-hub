@@ -13,7 +13,7 @@ namespace TheHub.Overlays.RadialLauncher;
 /// </summary>
 public class RadialModule : IHubModule
 {
-    public string Id => "RadialLauncher";
+    public string Id => "radial";
     public ModuleState State { get; private set; } = ModuleState.Stopped;
 
     private readonly IHubBus _bus;

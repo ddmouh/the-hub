@@ -31,4 +31,10 @@
 | 2026-10-13 | P3.3: Radial Settings Live | Triggers, Appearance, Slices editor, and profile switcher live updates |
 | 2026-10-13 | P3.4: Fullscreen & Zero Blocking | Replaced Dispatcher.Invoke in RadialDimmerOverlay; FullscreenProtection via PowerPolicy |
 | 2026-10-13 | Gate P3: Interaction Stress | 30 open/confirm cycles verified with stable state and zero watchdog timeouts |
+| 2026-10-13 | P4.1: Lazy Video Engine | Created WallpaperEngine with lazy FlyleafLib startup and aggressive inactive memory trimming |
+| 2026-10-13 | P4.2: WallpaperModule & Pause | Implemented IHubModule with multi-reason pause (Fullscreen, Battery, Workspace) halting decode loop (0% CPU) |
+| 2026-10-13 | P4.3: Multi-Monitor & Span Fit | Added virtual desktop Span fit mode across monitors and Center mode; robust resolution change handling |
+| 2026-10-13 | P4.4: Missing File Resilience | Added IsMissingFile warning badges and graceful fallback without crashes or state corruption |
+| 2026-10-13 | Gate P4: Tests & Verification | 94/94 solution tests passing; verified engine lifecycle, pause combinations, and span calculations |
+
 

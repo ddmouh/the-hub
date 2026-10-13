@@ -573,6 +573,8 @@
                                                         <ComboBoxItem Content="Fill" ToolTip="Fill screen (UniformToFill)"/>
                                                         <ComboBoxItem Content="Fit" ToolTip="Fit entire video within screen (Uniform)"/>
                                                         <ComboBoxItem Content="Stretch" ToolTip="Stretch video to screen boundaries (Fill)"/>
+                                                        <ComboBoxItem Content="Center" ToolTip="Center video in original aspect ratio"/>
+                                                        <ComboBoxItem Content="Span" ToolTip="Span video across multiple monitors"/>
                                                     </ComboBox>
                                                 </StackPanel>
                                             </WrapPanel>
@@ -653,6 +655,7 @@
                                                         <!-- Top Visual / Badge Box -->
                                                         <Border Grid.Row="0" Background="#1C1C22" BorderBrush="#2A2A34" BorderThickness="1" CornerRadius="8" Padding="8">
                                                             <Grid>
+                                                                <TextBlock Text="{Binding WarningBadgeText}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="9.5" FontWeight="Bold" Foreground="#EF4444"/>
                                                                 <TextBlock Text="🎞️" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"/>
                                                                 <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="{Binding TypeBadgeBackground}" CornerRadius="4" Padding="6,2">
                                                                     <TextBlock Text="{Binding TypeBadgeText}" FontSize="9.5" FontWeight="Bold" Foreground="#FFFFFF"/>

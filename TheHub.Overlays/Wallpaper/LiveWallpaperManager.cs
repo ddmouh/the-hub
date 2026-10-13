@@ -302,6 +302,31 @@ public class WallpaperManager : IDisposable
             return;
         }
 
+        // Handle Span Fit Mode across multiple monitors
+        if (string.Equals(_currentFitMode, "Span", StringComparison.OrdinalIgnoreCase) && monitors.Count > 1)
+        {
+            int minLeft = monitors.Min(m => m.Bounds.Left);
+            int minTop = monitors.Min(m => m.Bounds.Top);
+            int maxRight = monitors.Max(m => m.Bounds.Right);
+            int maxBottom = monitors.Max(m => m.Bounds.Bottom);
+            var spanBounds = new Rectangle(minLeft, minTop, maxRight - minLeft, maxBottom - minTop);
+
+            var spanWin = new LiveWallpaperWindow(spanBounds, "SPAN");
+            spanWin.SetFitMode("Span");
+            spanWin.SetBatteryPaused(_isBatteryOffline && SettingsManager.Current.WallpaperPauseOnBattery);
+            spanWin.MediaPlaybackFailed += (dev, err) =>
+            {
+                _activeWallpapers.Remove(dev);
+                WallpaperPlaybackFailed?.Invoke(dev, err);
+            };
+            spanWin.Show();
+            spanWin.PlayVideo(absolutePath, isMuted, volume);
+            _activeWallpapers["SPAN"] = spanWin;
+            AppLogger.Log($"WallpaperManager: Created multi-monitor SPAN window [{spanBounds.Width}x{spanBounds.Height} at ({spanBounds.Left},{spanBounds.Top})]");
+            TriggerMemoryTrimPostPlayback();
+            return;
+        }
+
         foreach (var monitor in monitors)
         {
             try
@@ -474,7 +499,7 @@ public class WallpaperManager : IDisposable
     public void StopVideo()
     {
         DisposeWallpapers();
-        MemoryOptimizer.TrimMemory();
+        WallpaperEngine.TrimMemoryAfterInactive();
     }
 
     public void Pause()

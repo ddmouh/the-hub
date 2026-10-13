@@ -53,6 +53,7 @@ public partial class MainWindow : Window
     private readonly RadialWindow _radialWindow;
     private readonly IslandModule _islandModule;
     private readonly WallpaperManager _wallpaperManager;
+    private readonly WallpaperModule _wallpaperModule;
     private DesktopClockWidget? _clockWidget;
     // Split hardware widgets (Section 2.3) — independent windows, same DesktopWidgetBase pattern as clock
     private DesktopCpuWidget? _cpuWidget;
@@ -61,6 +62,7 @@ public partial class MainWindow : Window
     private readonly OverviewViewModel _overviewViewModel;
     private string _selectedMonitorTarget = "ALL";
     public WallpaperManager WallpaperManager => _wallpaperManager;
+    public WallpaperModule WallpaperModule => _wallpaperModule;
     private readonly DispatcherTimer _ramTimer;
     private readonly TrayIconService _trayService;
     private WorkspaceConfig? _selectedWorkspace;
@@ -100,6 +102,7 @@ public partial class MainWindow : Window
         _radialWindow = new RadialWindow();
         _islandModule = new IslandModule();
         _wallpaperManager = new WallpaperManager();
+        _wallpaperModule = new WallpaperModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance, _wallpaperManager);
         _trayService = new TrayIconService();
 
         // Tray Icon event wiring
@@ -422,6 +425,9 @@ public partial class MainWindow : Window
 
             AppLogger.Log("Starting Dynamic Island Module");
             await _islandModule.StartAsync();
+
+            AppLogger.Log("Starting Wallpaper Module");
+            await _wallpaperModule.StartAsync();
 
             AppLogger.Log("Starting Core Hub Manager");
             await _core.StartAsync();
@@ -1253,6 +1259,20 @@ public partial class MainWindow : Window
                     resolvedPath = fallback;
                     item.FilePath = fallback;
                     SettingsManager.SaveSettings();
+                }
+                else
+                {
+                    item.NotifyStateChanged();
+                    _core.TriggerIslandEvent(new DynamicIslandEvent
+                    {
+                        Type = IslandEventType.SystemAlert,
+                        Title = "Wallpaper File Missing",
+                        Subtitle = $"Cannot find file: '{System.IO.Path.GetFileName(item.FilePath)}'",
+                        Glyph = "⚠️",
+                        DisplayDurationMs = 3500
+                    });
+                    RefreshWallpapersGallery();
+                    return;
                 }
             }
 
@@ -2302,6 +2322,7 @@ public partial class MainWindow : Window
         try { _radialWindow?.Close(); } catch { }
         try { _islandModule?.Dispose(); } catch { }
         try { _clockWidget?.Close(); } catch { }
+        try { _wallpaperModule?.Dispose(); } catch { }
         try { _wallpaperManager?.DisposeWallpapers(); } catch { }
 
         // 5. Unhook keyboard/mouse hooks and close IPC
