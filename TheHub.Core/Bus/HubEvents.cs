@@ -33,3 +33,9 @@ public sealed record ActiveAppChanged(string AppName, string? WindowTitle) : IHu
 public sealed record PowerStateChanged(bool IsOnBattery, int BatteryPercent) : IHubEvent;
 
 public sealed record SettingsChanged(string SectionName) : IHubEvent;
+
+public sealed record RawMouseInput(int Msg, int X, int Y, uint MouseData) : IHubEvent;
+
+public sealed record RawKeyInput(int VkCode, bool IsDown, bool IsAlt, bool IsControl, bool IsShift) : IHubEvent;
+
+public sealed record RadialGestureEvent(string Action, int X, int Y, double Angle = 0, double Distance = 0) : IHubEvent;

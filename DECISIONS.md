@@ -25,4 +25,10 @@
 | 2026-10-13 | P2.5/P2.6: Island Spring Morph | Capsule morphing driven by pure physics SpringAnimator engine with snappy curve |
 | 2026-10-13 | P2.7: Event Services | Implemented UsbWatcher, DownloadWatcher, PrayerTimeService, and PomodoroService |
 | 2026-10-13 | Gate P2: Interaction Stress | 50 volume, 20 media, 30 morph, and USB events executed with zero watchdog violations |
+| 2026-10-13 | P3.1: Radial Gesture Engine | Pure RadialGestureRecognizer with hold detection, flick angle, and activation zones |
+| 2026-10-13 | P3.1: RadialModule | Implemented IHubModule managing RadialWindow lifecycle, decoupled from UI thread |
+| 2026-10-13 | P3.2: Wheel Visuals & Bloom | RadialWheelCanvas bloom motion with zero animation on hidden window |
+| 2026-10-13 | P3.3: Radial Settings Live | Triggers, Appearance, Slices editor, and profile switcher live updates |
+| 2026-10-13 | P3.4: Fullscreen & Zero Blocking | Replaced Dispatcher.Invoke in RadialDimmerOverlay; FullscreenProtection via PowerPolicy |
+| 2026-10-13 | Gate P3: Interaction Stress | 30 open/confirm cycles verified with stable state and zero watchdog timeouts |
 

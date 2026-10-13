@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using TheHub.Core.Bridge;
 using TheHub.Core.Native;
 
 namespace TheHub.Overlays.RadialLauncher;
@@ -36,7 +37,7 @@ public class RadialDimmerOverlay : Window
     /// </summary>
     public void ShowDimmer(double opacityPercent, double screenPhysX, double screenPhysY)
     {
-        Dispatcher.Invoke(() =>
+        _ = UiBridge.Instance.InvokeAsync(() =>
         {
             if (opacityPercent <= 0)
             {
@@ -85,7 +86,7 @@ public class RadialDimmerOverlay : Window
 
     public void HideDimmer()
     {
-        Dispatcher.Invoke(() =>
+        _ = UiBridge.Instance.InvokeAsync(() =>
         {
             Opacity = 0.0;
             Visibility = Visibility.Hidden;
