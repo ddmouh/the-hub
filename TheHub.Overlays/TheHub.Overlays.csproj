@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TheHub.Common\TheHub.Common.csproj" />
     <ProjectReference Include="..\TheHub.Core\TheHub.Core.csproj" />
+    <ProjectReference Include="..\TheHub.Design\TheHub.Design.csproj" />
   </ItemGroup>
 
   <ItemGroup>

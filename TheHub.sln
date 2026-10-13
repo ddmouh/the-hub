@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheHub.App", "TheHub.App\Th
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheHub.Tests", "TheHub.Tests\TheHub.Tests.csproj", "{3C77EE12-825F-4576-A6D2-335D5601F069}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheHub.Design", "TheHub.Design\TheHub.Design.csproj", "{06D0CF0F-8DDD-41B1-99C4-2C7F37019D3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{3C77EE12-825F-4576-A6D2-335D5601F069}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C77EE12-825F-4576-A6D2-335D5601F069}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C77EE12-825F-4576-A6D2-335D5601F069}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06D0CF0F-8DDD-41B1-99C4-2C7F37019D3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06D0CF0F-8DDD-41B1-99C4-2C7F37019D3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06D0CF0F-8DDD-41B1-99C4-2C7F37019D3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06D0CF0F-8DDD-41B1-99C4-2C7F37019D3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
