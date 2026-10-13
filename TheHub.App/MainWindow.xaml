@@ -504,7 +504,7 @@
                         <RadioButton x:Name="NavBtnIsland" Content="🏝️  Dynamic Island" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="3"/>
                         <RadioButton x:Name="NavBtnAi" Content="🤖  AI Assistant" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="4"/>
                         <RadioButton x:Name="NavBtnOptions" Content="⚙️  Options" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="5"/>
-                        <RadioButton x:Name="NavBtnGallery" Content="🖼️  Showcase Gallery" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="6"/>
+                        <RadioButton x:Name="NavBtnGallery" Content="🖼️  Showcase Gallery" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="6" Visibility="Collapsed"/>
                     </StackPanel>
 
                     <!-- Bottom Quick Actions -->

@@ -287,7 +287,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="TxtGalleryStatus" Grid.Column="0" Text="Showing all 17 registered visual UI flows. Ready for inspection and high-res export." FontSize="11" Foreground="#71717A" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TxtGalleryStatus" Grid.Column="0" Text="Initializing registered visual UI flows..." FontSize="11" Foreground="#71717A" VerticalAlignment="Center"/>
                 <TextBlock x:Name="TxtExportPathInfo" Grid.Column="1" Text="Screenshots folder: /Screenshots/UI_Flow/" FontSize="10.5" Foreground="#3B82F6" VerticalAlignment="Center" Cursor="Hand" MouseLeftButtonDown="OnOpenFolderClick"/>
             </Grid>
         </Border>

@@ -1,0 +1,300 @@
+﻿{
+  "RadialLauncherEnabled": true,
+  "RadialMiddleClickTrigger": true,
+  "RadialAltSpaceTrigger": true,
+  "RadialRadius": 150,
+  "RadialCenterRadius": 60,
+  "HoldDelayMs": 120,
+  "LauncherShortcuts": [
+    {
+      "Id": "9c3df5c7-63c8-4114-85f5-f821dec693a9",
+      "Title": "Discord",
+      "ExecutablePath": "discord.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83D\uDCAC",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 0
+    },
+    {
+      "Id": "bf5dd755-94cd-4f4c-a02c-155b75302107",
+      "Title": "Spotify",
+      "ExecutablePath": "spotify.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83C\uDFB5",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 1
+    },
+    {
+      "Id": "d66994b9-0760-44df-b835-479f77b54e33",
+      "Title": "Browser",
+      "ExecutablePath": "chrome.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83C\uDF10",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 2
+    },
+    {
+      "Id": "5fb19ef3-b478-446e-a21d-1a7adc7a4a7b",
+      "Title": "Terminal",
+      "ExecutablePath": "wt.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83D\uDCBB",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 3
+    },
+    {
+      "Id": "9f42092a-9d51-4ffe-83d3-18735ef2b4a1",
+      "Title": "Explorer",
+      "ExecutablePath": "explorer.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83D\uDCC1",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 4
+    },
+    {
+      "Id": "e8ce58f4-56ba-4c90-870d-8c968252af25",
+      "Title": "Settings",
+      "ExecutablePath": "control.exe",
+      "Arguments": "",
+      "IconGlyph": "\u2699\uFE0F",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 5
+    },
+    {
+      "Id": "390fcb02-aa4e-4514-8c44-1879bc17bb03",
+      "Title": "Notepad",
+      "ExecutablePath": "notepad.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83D\uDCDD",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 6
+    },
+    {
+      "Id": "08a56a95-c9e8-4b4d-8141-7ea6283b0e36",
+      "Title": "Calculator",
+      "ExecutablePath": "calc.exe",
+      "Arguments": "",
+      "IconGlyph": "\uD83D\uDD22",
+      "Category": "General",
+      "ShortcutType": "Application",
+      "Order": 7
+    }
+  ],
+  "GestureBehavior": "Hold",
+  "ActivationZone": 60,
+  "GlobalShortcut": "Alt\u002BZ",
+  "MouseTriggerButton": "Middle",
+  "AppearanceTheme": "Black",
+  "WorkspaceSwitchMode": "Picker",
+  "StartWithWindows": false,
+  "EnableMouseTrigger": true,
+  "PerformanceMode": false,
+  "FullscreenProtection": true,
+  "IconSize": 64,
+  "TargetSpacing": 10,
+  "HoverColor": "#FFFFFF",
+  "TargetingMode": "Pointer",
+  "PersistentLabels": false,
+  "WheelOpacity": 85,
+  "BackgroundDimming": 25,
+  "DynamicIslandEnabled": true,
+  "IslandShowMedia": true,
+  "IslandShowVolume": true,
+  "IslandShowClipboard": true,
+  "IslandShowUsb": true,
+  "IslandHideOnFullscreen": true,
+  "IslandAlwaysShowOnFullscreen": false,
+  "IslandMonitorIndex": 0,
+  "IslandDurationMs": 2500,
+  "IslandTopOffset": 12,
+  "IslandCustomX": 411,
+  "IslandCustomY": 12,
+  "IslandScale": 1,
+  "IslandLockPosition": false,
+  "IslandShowHoverQuickControls": true,
+  "IslandShowMicMute": true,
+  "IslandShowBrightnessControl": true,
+  "IslandShowActiveApp": true,
+  "RadialProfiles": [
+    {
+      "Id": "1af6477b-fdef-4704-9764-e5e4764879f5",
+      "Name": "Main Wheel",
+      "IconGlyph": "\uD83C\uDFAF",
+      "AccentColor": "#F63A3A",
+      "IsActive": true,
+      "IsVisibleInSwitcher": true,
+      "HotkeyIndex": 1,
+      "Slices": [
+        {
+          "Id": "9c3df5c7-63c8-4114-85f5-f821dec693a9",
+          "Title": "Discord",
+          "ExecutablePath": "discord.exe",
+          "Arguments": "",
+          "IconGlyph": "\uD83D\uDCAC",
+          "Category": "General",
+          "ShortcutType": "Application",
+          "Order": 0
+        },
+        {
+          "Id": "0049b1d3-6d53-4662-84f8-600cfeb5ed91",
+          "Title": "Antigravity IDE",
+          "ExecutablePath": "C:\\\\Users\\\\User\\\\AppData\\Local\\Programs\\Antigravity IDE\\Antigravity IDE.exe",
+          "Arguments": "",
+          "IconGlyph": "\u26A1",
+          "Category": "General",
+          "ShortcutType": "Application",
+          "Order": 1
+        },
+        {
+          "Id": "73595c47-d81f-4f67-b9c3-7ef5caee2389",
+          "Title": "Brave",
+          "ExecutablePath": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+          "Arguments": "",
+          "IconGlyph": "\u26A1",
+          "Category": "General",
+          "ShortcutType": "Application",
+          "Order": 2
+        },
+        {
+          "Id": "fc56cb62-dc22-4c5b-a819-94d0214df465",
+          "Title": "Spotify",
+          "ExecutablePath": "C:\\\\Users\\\\User\\\\AppData\\Local\\Microsoft\\WindowsApps\\Spotify.exe",
+          "Arguments": "",
+          "IconGlyph": "\u26A1",
+          "Category": "General",
+          "ShortcutType": "Application",
+          "Order": 3
+        }
+      ]
+    }
+  ],
+  "Workspaces": [
+    {
+      "Id": "ef1a1e4f-cb30-45d1-a57f-3ac852e4e622",
+      "Name": "\u064A\u064A",
+      "Description": "",
+      "IconGlyph": "\uD83D\uDCC1",
+      "AccentColor": "#3B82F6",
+      "Apps": [
+        {
+          "Id": "e53932b0-6228-4201-b0b7-af92955830c6",
+          "Title": "AnyDesk",
+          "ExecutablePath": "C:\\Program Files (x86)\\AnyDesk\\AnyDesk.exe",
+          "Arguments": "",
+          "IconGlyph": "\u26A1",
+          "Category": "\u064A\u064A",
+          "ShortcutType": "Application",
+          "Order": 0
+        },
+        {
+          "Id": "8306c398-6288-410a-81d9-7ce88cd5510c",
+          "Title": "Blueprint Studio",
+          "ExecutablePath": "C:\\\\Users\\\\User\\\\AppData\\Local\\Programs\\blueprint-studio\\Blueprint Studio.exe",
+          "Arguments": "",
+          "IconGlyph": "\u26A1",
+          "Category": "\u064A\u064A",
+          "ShortcutType": "Application",
+          "Order": 1
+        },
+        {
+          "Id": "31affdde-5221-497b-bc2a-a39bccec018c",
+          "Title": "Bluetooth Audio Receiver",
+          "ExecutablePath": "shell:AppsFolder\\55746MarkSmirnov.BluetoothAudioReveicer_xwrbx6997tsfc!App",
+          "Arguments": "",
+          "IconGlyph": "\u26A1",
+          "Category": "\u064A\u064A",
+          "ShortcutType": "Application",
+          "Order": 2
+        }
+      ],
+      "PauseWallpapers": true,
+      "HideTaskbar": false,
+      "EnableDoNotDisturb": false,
+      "TargetVolume": null,
+      "IsActive": true,
+      "IsVisibleInSwitcher": true,
+      "IsDefaultActive": false,
+      "HotkeyIndex": 1,
+      "ShortcutCountText": "Current \u00B7 3 shortcuts",
+      "BorderBrushColor": "#FFFFFF",
+      "BorderThicknessValue": "2",
+      "CardBackground": "#141418"
+    }
+  ],
+  "AIEmergencyKillSwitch": false,
+  "AIPermissions": [
+    {
+      "ActionName": "OpenApplications",
+      "Description": "Launch installed programs and web URLs",
+      "Level": 0,
+      "IsGranted": true
+    },
+    {
+      "ActionName": "ReadSystemSpecs",
+      "Description": "Read CPU, RAM, and battery metrics",
+      "Level": 0,
+      "IsGranted": true
+    },
+    {
+      "ActionName": "AdjustAudioVolume",
+      "Description": "Change speaker volume and mute states",
+      "Level": 1,
+      "IsGranted": true
+    },
+    {
+      "ActionName": "CloseApplications",
+      "Description": "Terminate background and foreground tasks",
+      "Level": 1,
+      "IsGranted": true
+    },
+    {
+      "ActionName": "ManageFiles",
+      "Description": "Create or delete user files",
+      "Level": 2,
+      "IsGranted": false
+    },
+    {
+      "ActionName": "SystemAdminScripts",
+      "Description": "Run administrative PowerShell / cmd commands",
+      "Level": 3,
+      "IsGranted": false
+    }
+  ],
+  "AIAuditLogs": [],
+  "PauseGraphicsOnFullscreen": true,
+  "LowPowerMode": false,
+  "Wallpapers": [
+    {
+      "Id": "bacb1ac9-355b-4234-af33-8f7066a65676",
+      "Title": "fallout-on-prime-live-wallpaper",
+      "FilePath": "C:\\\\Users\\\\User\\\\AppData\\Roaming\\TheHub\\Wallpapers\\fallout-on-prime-live-wallpaper.mp4",
+      "Type": 1,
+      "IsActive": false,
+      "DateAdded": "2026-09-19T05:01:32.7811683Z"
+    },
+    {
+      "Id": "ff3d1221-2f54-439b-93c4-ba7a9d9f2116",
+      "Title": "SILVERMAN",
+      "FilePath": "C:\\\\Users\\\\User\\\\Downloads\\MediaDownloader\\SILVERMAN.mp4",
+      "Type": 1,
+      "IsActive": false,
+      "DateAdded": "2026-09-19T03:54:54.5822665Z"
+    }
+  ],
+  "ActiveWallpaperId": null,
+  "MonitorWallpapers": {},
+  "SelectedTargetMonitor": "ALL",
+  "WallpaperMuted": false,
+  "WallpaperPauseOnFullscreen": false,
+  "WallpaperPauseOnBattery": false,
+  "WallpaperFitMode": "Fit",
+  "GlobalFontFamily": "Super Waffles",
+  "CustomFonts": []
+}

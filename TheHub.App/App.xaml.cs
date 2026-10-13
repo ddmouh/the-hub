@@ -84,6 +84,33 @@ public partial class App : System.Windows.Application
         AppLogger.Log("App.OnStartup base finished");
 
         ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+        bool isShowcase = e.Args.Any(arg => arg.Equals("--showcase", StringComparison.OrdinalIgnoreCase));
+        if (isShowcase)
+        {
+            AppLogger.Log("App.OnStartup --showcase detected - opening ScreensGalleryWindow and exporting snapshots");
+            var galleryWin = new Showcase.ScreensGalleryWindow();
+            MainWindow = galleryWin;
+            galleryWin.Show();
+            galleryWin.Activate();
+            galleryWin.Focus();
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var registry = new Showcase.ViewSnapshotRegistry();
+                    await Showcase.ScreenSnapshotExporter.ExportAllAsync(registry.GetAllSnapshots());
+                    AppLogger.Log("Automated showcase PNG export completed successfully.");
+                }
+                catch (Exception ex)
+                {
+                    AppLogger.Log($"Showcase PNG export error: {ex}");
+                }
+            });
+            return;
+        }
+
         var win = new MainWindow();
         MainWindow = win;
 

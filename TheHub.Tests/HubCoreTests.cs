@@ -413,5 +413,69 @@ public class HubCoreTests
         Assert.True(success);
         Assert.True(status.ACLineStatus == 0 || status.ACLineStatus == 1 || status.ACLineStatus == 255);
     }
+
+    [Fact]
+    public void SettingsGoldenFile_LoadsSuccessfully_PreservesAllSections()
+    {
+        string fixturePath = Path.Combine(AppContext.BaseDirectory, "Fixtures", "settings.golden.json");
+        Assert.True(File.Exists(fixturePath), $"Golden file fixture must exist at: {fixturePath}");
+
+        string json = File.ReadAllText(fixturePath);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+
+        var settings = JsonSerializer.Deserialize<AppSettings>(json, options);
+        Assert.NotNull(settings);
+
+        // Verify key modules and sections are present and non-empty
+        Assert.NotNull(settings.LauncherShortcuts);
+        Assert.True(settings.LauncherShortcuts.Count > 0, "LauncherShortcuts should not be empty");
+
+        Assert.NotNull(settings.Workspaces);
+        Assert.True(settings.Workspaces.Count > 0, "Workspaces should not be empty");
+
+        Assert.NotNull(settings.Wallpapers);
+        Assert.True(settings.Wallpapers.Count > 0, "Wallpapers should not be empty");
+
+        Assert.NotNull(settings.RadialProfiles);
+        Assert.True(settings.RadialProfiles.Count > 0, "RadialProfiles should not be empty");
+
+        Assert.True(settings.IslandDurationMs > 0, "IslandDurationMs must be positive");
+    }
+
+    [Fact]
+    public void SettingsGoldenFile_RoundTripSerialization_PreservesContentWithoutLoss()
+    {
+        string fixturePath = Path.Combine(AppContext.BaseDirectory, "Fixtures", "settings.golden.json");
+        string originalJson = File.ReadAllText(fixturePath);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+
+        var firstLoad = JsonSerializer.Deserialize<AppSettings>(originalJson, options);
+        Assert.NotNull(firstLoad);
+
+        string serialized = JsonSerializer.Serialize(firstLoad, options);
+        var roundTripped = JsonSerializer.Deserialize<AppSettings>(serialized, options);
+        Assert.NotNull(roundTripped);
+
+        Assert.Equal(firstLoad.RadialLauncherEnabled, roundTripped.RadialLauncherEnabled);
+        Assert.Equal(firstLoad.RadialRadius, roundTripped.RadialRadius);
+        Assert.Equal(firstLoad.IslandDurationMs, roundTripped.IslandDurationMs);
+        Assert.Equal(firstLoad.DynamicIslandEnabled, roundTripped.DynamicIslandEnabled);
+        Assert.Equal(firstLoad.WallpaperPauseOnBattery, roundTripped.WallpaperPauseOnBattery);
+        Assert.Equal(firstLoad.WallpaperFitMode, roundTripped.WallpaperFitMode);
+        Assert.Equal(firstLoad.LauncherShortcuts?.Count, roundTripped.LauncherShortcuts?.Count);
+        Assert.Equal(firstLoad.Workspaces?.Count, roundTripped.Workspaces?.Count);
+        Assert.Equal(firstLoad.Wallpapers?.Count, roundTripped.Wallpapers?.Count);
+        Assert.Equal(firstLoad.RadialProfiles?.Count, roundTripped.RadialProfiles?.Count);
+        Assert.Equal(firstLoad.GlobalShortcut, roundTripped.GlobalShortcut);
+    }
 }
+
 

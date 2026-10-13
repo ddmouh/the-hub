@@ -1,5 +1,4 @@
 using TheHub.Common.Config;
-using TheHub.Common.IPC;
 using TheHub.Common.Models;
 using TheHub.Core.Hooks;
 using TheHub.Core.Monitors;
@@ -16,7 +15,6 @@ public class CoreHubManager : IDisposable
     private readonly ClipboardMonitor _clipboardMonitor;
     private readonly VolumeMonitor _volumeMonitor;
     private readonly ActiveAppMonitor _activeAppMonitor;
-    private NamedPipeServer? _pipeServer;
 
     public event Action<int, int>? RadialLauncherRequested;
     public event Action<int, int>? RadialPointerMoved;
@@ -46,11 +44,7 @@ public class CoreHubManager : IDisposable
     {
         var settings = SettingsManager.Current;
 
-        // 1. Start Named Pipe Server for external IPC immediately
-        _pipeServer = new NamedPipeServer(IpcConstants.CorePipeName, HandleIpcMessageAsync);
-        _pipeServer.Start();
-
-        // 2. Hooks
+        // 1. Hooks
         if (settings.RadialLauncherEnabled)
         {
             _mouseHook.RadialOpenRequested += (x, y) => RadialLauncherRequested?.Invoke(x, y);
@@ -110,41 +104,6 @@ public class CoreHubManager : IDisposable
     public async Task MediaNextAsync() => await _mediaMonitor.SkipNextAsync();
     public async Task MediaPrevAsync() => await _mediaMonitor.SkipPreviousAsync();
 
-    private Task<IpcMessage?> HandleIpcMessageAsync(IpcMessage msg)
-    {
-        switch (msg.Type)
-        {
-            case IpcMessageType.Ping:
-                return Task.FromResult<IpcMessage?>(IpcMessage.Create(IpcMessageType.Pong, "Core Alive"));
-
-            case IpcMessageType.ShowDynamicIslandEvent:
-                var evt = msg.GetData<DynamicIslandEvent>();
-                if (evt != null)
-                {
-                    DynamicIslandEventReceived?.Invoke(evt);
-                }
-                break;
-
-            case IpcMessageType.LaunchShortcut:
-                var shortcut = msg.GetData<AppShortcut>();
-                if (shortcut != null)
-                {
-                    AppLauncherService.LaunchShortcut(shortcut);
-                }
-                break;
-
-            case IpcMessageType.ApplyWorkspace:
-                var ws = msg.GetData<WorkspaceConfig>();
-                if (ws != null)
-                {
-                    _ = AppLauncherService.ApplyWorkspaceAsync(ws);
-                }
-                break;
-        }
-
-        return Task.FromResult<IpcMessage?>(null);
-    }
-
     public void Dispose()
     {
         try { _mouseHook.Dispose(); } catch { }
@@ -154,6 +113,5 @@ public class CoreHubManager : IDisposable
         try { _volumeMonitor.Dispose(); } catch { }
         try { _activeAppMonitor.Dispose(); } catch { }
         try { _mediaMonitor.Dispose(); } catch { }
-        try { _ = _pipeServer?.DisposeAsync(); } catch { }
     }
 }
