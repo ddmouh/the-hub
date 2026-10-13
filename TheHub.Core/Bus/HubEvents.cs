@@ -39,3 +39,5 @@ public sealed record RawMouseInput(int Msg, int X, int Y, uint MouseData) : IHub
 public sealed record RawKeyInput(int VkCode, bool IsDown, bool IsAlt, bool IsControl, bool IsShift) : IHubEvent;
 
 public sealed record RadialGestureEvent(string Action, int X, int Y, double Angle = 0, double Distance = 0) : IHubEvent;
+
+public sealed record AIKillSwitchTriggered(bool IsActive, string Reason) : IHubEvent;

@@ -17,6 +17,7 @@ using TheHub.Overlays.DynamicIsland;
 using TheHub.Overlays.RadialLauncher;
 using TheHub.Overlays.Wallpaper;
 using TheHub.Overlays.Widgets;
+using TheHub.Core.AI;
 using Button = System.Windows.Controls.Button;
 using RadioButton = System.Windows.Controls.RadioButton;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -67,6 +68,8 @@ public partial class MainWindow : Window
     public WorkspaceModule WorkspaceModule => _workspaceModule;
     private readonly WidgetsModule _widgetsModule;
     public WidgetsModule WidgetsModule => _widgetsModule;
+    private readonly AIAssistantModule _aiAssistantModule;
+    public AIAssistantModule AIAssistantModule => _aiAssistantModule;
     private readonly DispatcherTimer _ramTimer;
     private readonly TrayIconService _trayService;
     private WorkspaceConfig? _selectedWorkspace;
@@ -109,6 +112,17 @@ public partial class MainWindow : Window
         _wallpaperModule = new WallpaperModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance, _wallpaperManager);
         _workspaceModule = new WorkspaceModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
         _widgetsModule = new WidgetsModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
+        _aiAssistantModule = new AIAssistantModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
+        _aiAssistantModule.ConfirmElevatedActionAsync = async (intent) =>
+        {
+            var mbResult = MessageBox.Show(
+                $"The AI Assistant requested an elevated action:\n\nTool: {intent.ToolName}\nArguments: {string.Join(", ", intent.Arguments.Select(kv => $"{kv.Key}={kv.Value}"))}\n\nDo you want to authorize this action?",
+                "Security Sandbox — Elevated Permission Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            return mbResult == MessageBoxResult.Yes;
+        };
+        _ = _aiAssistantModule.StartAsync();
         _trayService = new TrayIconService();
 
         // Tray Icon event wiring
@@ -2106,36 +2120,20 @@ public partial class MainWindow : Window
 
     #endregion
 
-    private void OnAiExecuteClick(object sender, RoutedEventArgs e)
+    private async void OnAiExecuteClick(object sender, RoutedEventArgs e)
     {
         string prompt = AiInputTextBox.Text.Trim();
         if (string.IsNullOrEmpty(prompt)) return;
 
-        if (SettingsManager.Current.AIEmergencyKillSwitch)
+        AiOutputTextBlock.Text = "⏳ Processing prompt through security sandbox...";
+        var result = await _aiAssistantModule.ProcessPromptAsync(prompt);
+        if (result.Success)
         {
-            AiOutputTextBlock.Text = "⛔ AI execution blocked: Emergency Kill Switch is ACTIVE.";
-            return;
-        }
-
-        // Parse prompt for tool calling simulation
-        if (prompt.Contains("جيمينج", StringComparison.OrdinalIgnoreCase) || prompt.Contains("gaming", StringComparison.OrdinalIgnoreCase))
-        {
-            var ws = SettingsManager.Current.Workspaces.FirstOrDefault(w => w.Name == "Gaming");
-            if (ws != null)
-            {
-                _ = AppLauncherService.ApplyWorkspaceAsync(ws);
-                AiOutputTextBlock.Text = $"✅ Executed Tool: ApplyWorkspace(\"Gaming\")\n• Launched: {string.Join(", ", ws.Apps.Select(a => a.Title))}\n• Applied profile settings & muted background widgets.";
-            }
-        }
-        else if (prompt.Contains("استهلاك", StringComparison.OrdinalIgnoreCase) || prompt.Contains("specs", StringComparison.OrdinalIgnoreCase) || prompt.Contains("ram", StringComparison.OrdinalIgnoreCase))
-        {
-            long memMb = Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024);
-            AiOutputTextBlock.Text = $"✅ Executed Tool: ReadSystemSpecs()\n• CPU: <0.5% (Idle)\n• Hub RAM: {memMb} MB\n• Display: Primary (1920x1080 @ 60Hz)";
+            AiOutputTextBlock.Text = $"✅ {result.Message}";
         }
         else
         {
-            // Default app opener
-            AiOutputTextBlock.Text = $"✅ Executed Tool: SystemCall(\"{prompt}\")\n• Permission: Level 0 (Safe)\n• Status: Dispatched successfully to Windows Shell.";
+            AiOutputTextBlock.Text = $"⛔ {result.Message}";
         }
     }
 
@@ -2147,6 +2145,7 @@ public partial class MainWindow : Window
 
         if (settings.AIEmergencyKillSwitch)
         {
+            _aiAssistantModule.TriggerEmergencyKillSwitch();
             EmergencyButton.Content = "Resume Services";
             _core.TriggerIslandEvent(new DynamicIslandEvent
             {
@@ -2159,6 +2158,7 @@ public partial class MainWindow : Window
         }
         else
         {
+            _aiAssistantModule.ResetKillSwitch();
             EmergencyButton.Content = "Kill Switch";
             _core.TriggerIslandEvent(new DynamicIslandEvent
             {

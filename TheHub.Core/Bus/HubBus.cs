@@ -11,6 +11,7 @@ namespace TheHub.Core.Bus;
 public class HubBus : IHubBus
 {
     public static HubBus Default { get; } = new();
+    public static HubBus Instance => Default;
 
     private readonly Channel<IHubEvent> _channel;
     private readonly ConcurrentDictionary<Type, List<Delegate>> _subscriptions = new();

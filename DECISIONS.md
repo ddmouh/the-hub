@@ -45,6 +45,11 @@
 | 2026-10-13 | P6.3: Polling Suspension Virtuals | Added PausePolling() / ResumePolling() across DesktopWidgetBase and all hardware widgets |
 | 2026-10-13 | P6.4: UiBridge STA Support | Enhanced WpfUiDispatcher to execute on STA threads in headless/testing environments without WPF pump |
 | 2026-10-13 | Gate P6: Tests & Verification | 105/105 solution tests passing; verified magnetic edge snap, alignment, and module power lifecycle |
+| 2026-10-13 | P7.1: AI Sandbox & Permissions | Implemented 4-tier security sandbox (Level 0 Safe to Level 3 Dangerous) with audit logging in audit.jsonl |
+| 2026-10-13 | P7.2: Emergency Kill Switch | Created sub-second emergency kill switch immediately halting active actions and rejecting new executions |
+| 2026-10-13 | P7.3: Tools & Intent Parser | Implemented pure AIIntentParser with argument extraction and concrete tools (metrics, volume, workspace, apps) |
+| 2026-10-13 | P7.4: AIAssistantModule & UI | Implemented IHubModule coordinating assistant lifecycle, wired into MainWindow and emergency UI button |
+| 2026-10-13 | Gate P7: Tests & Verification | 109/109 solution tests passing; verified intent parsing, 4-tier sandbox enforcement, kill switch, and audit trail |
 
 
 
