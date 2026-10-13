@@ -20,7 +20,15 @@ public class WpfUiDispatcher : IUiDispatcher
 
     public void InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
     {
-        _dispatcher.InvokeAsync(action, priority);
+        if (Application.Current?.Dispatcher != null && !Application.Current.Dispatcher.HasShutdownStarted)
+        {
+            Application.Current.Dispatcher.InvokeAsync(action, priority);
+        }
+        else
+        {
+            // Headless / unit testing environment without active WPF Application pump
+            Task.Run(action);
+        }
     }
 }
 

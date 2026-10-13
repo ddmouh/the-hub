@@ -36,5 +36,10 @@
 | 2026-10-13 | P4.3: Multi-Monitor & Span Fit | Added virtual desktop Span fit mode across monitors and Center mode; robust resolution change handling |
 | 2026-10-13 | P4.4: Missing File Resilience | Added IsMissingFile warning badges and graceful fallback without crashes or state corruption |
 | 2026-10-13 | Gate P4: Tests & Verification | 94/94 solution tests passing; verified engine lifecycle, pause combinations, and span calculations |
+| 2026-10-13 | P5.1: Pure WorkspaceEngine | Created WorkspaceEngine with atomic plan generation (launch/kill/volume/wallpaper) & desktop snapshotting |
+| 2026-10-13 | P5.2: WorkspaceModule | Implemented IHubModule managing atomic workspace transitions and broadcasting WorkspaceChanged to HubBus |
+| 2026-10-13 | P5.3/P5.4: Workspace Studio UI | Added Capture Current Desktop button, island coordination, and multi-profile linkage |
+| 2026-10-13 | Gate P5: Tests & Verification | 100/100 solution tests passing; verified atomic plan generation, isolation rules, and snapshot filters |
+
 
 

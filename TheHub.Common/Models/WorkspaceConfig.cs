@@ -19,6 +19,34 @@ public class WorkspaceConfig : INotifyPropertyChanged
     private bool _isVisibleInSwitcher = true;
     private bool _isDefaultActive = false;
     private int _hotkeyIndex = 1;
+    private string? _wallpaperId = null;
+    private string? _radialProfileId = null;
+    private WorkspaceSwitchMode _switchMode = WorkspaceSwitchMode.LaunchOnly;
+    private bool _closeAppsOnExit = false;
+
+    public string? WallpaperId
+    {
+        get => _wallpaperId;
+        set { _wallpaperId = value; OnPropertyChanged(); }
+    }
+
+    public string? RadialProfileId
+    {
+        get => _radialProfileId;
+        set { _radialProfileId = value; OnPropertyChanged(); }
+    }
+
+    public WorkspaceSwitchMode SwitchMode
+    {
+        get => _switchMode;
+        set { _switchMode = value; OnPropertyChanged(); }
+    }
+
+    public bool CloseAppsOnExit
+    {
+        get => _closeAppsOnExit;
+        set { _closeAppsOnExit = value; OnPropertyChanged(); }
+    }
 
     public string Id
     {

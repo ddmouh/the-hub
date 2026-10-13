@@ -63,6 +63,8 @@ public partial class MainWindow : Window
     private string _selectedMonitorTarget = "ALL";
     public WallpaperManager WallpaperManager => _wallpaperManager;
     public WallpaperModule WallpaperModule => _wallpaperModule;
+    private readonly WorkspaceModule _workspaceModule;
+    public WorkspaceModule WorkspaceModule => _workspaceModule;
     private readonly DispatcherTimer _ramTimer;
     private readonly TrayIconService _trayService;
     private WorkspaceConfig? _selectedWorkspace;
@@ -103,6 +105,7 @@ public partial class MainWindow : Window
         _islandModule = new IslandModule();
         _wallpaperManager = new WallpaperManager();
         _wallpaperModule = new WallpaperModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance, _wallpaperManager);
+        _workspaceModule = new WorkspaceModule(Core.Bus.HubBus.Instance, Core.Bridge.UiBridge.Instance);
         _trayService = new TrayIconService();
 
         // Tray Icon event wiring
@@ -428,6 +431,9 @@ public partial class MainWindow : Window
 
             AppLogger.Log("Starting Wallpaper Module");
             await _wallpaperModule.StartAsync();
+
+            AppLogger.Log("Starting Workspace Module");
+            await _workspaceModule.StartAsync();
 
             AppLogger.Log("Starting Core Hub Manager");
             await _core.StartAsync();
@@ -1496,20 +1502,47 @@ public partial class MainWindow : Window
     {
         if (sender is Button btn && btn.Tag is WorkspaceConfig ws)
         {
-            var (successCount, failedCount, messages) = await AppLauncherService.ApplyWorkspaceDetailedAsync(ws);
-
-            string subtitle = failedCount == 0
-                ? $"Launched {successCount} application{(successCount == 1 ? "" : "s")} & tuned profile"
-                : $"Launched {successCount}/{ws.Apps.Count} apps ({failedCount} failed)";
+            bool ok = await _workspaceModule.SwitchToWorkspaceAsync(ws);
+            RefreshWorkspacesCards();
 
             _core.TriggerIslandEvent(new DynamicIslandEvent
             {
                 Type = IslandEventType.WorkspaceChanged,
                 Title = $"Workspace: {ws.Name}",
-                Subtitle = subtitle,
+                Subtitle = ok ? $"Switched to {ws.Name} profile ({ws.Apps.Count} apps)" : "Failed to switch workspace",
                 Glyph = ws.IconGlyph,
                 DisplayDurationMs = 3500
             });
+        }
+    }
+
+    private void OnCaptureDesktopWorkspaceClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var snapshots = WorkspaceEngine.CaptureDesktopSnapshot();
+            string wsName = $"Desktop {DateTime.Now:HH:mm}";
+            var newWs = WorkspaceEngine.CreateWorkspaceFromSnapshot(wsName, "🖥️", "#10B981", snapshots);
+
+            SettingsManager.Current.Workspaces.Add(newWs);
+            SettingsManager.SaveSettings();
+
+            RefreshWorkspacesList();
+            OpenWorkspaceDetail(newWs);
+            _islandModule.SetWorkspaces(SettingsManager.Current.Workspaces);
+
+            _core.TriggerIslandEvent(new DynamicIslandEvent
+            {
+                Type = IslandEventType.WorkspaceChanged,
+                Title = "Desktop Captured",
+                Subtitle = $"Created '{wsName}' with {newWs.Apps.Count} running app(s)",
+                Glyph = "📸",
+                DisplayDurationMs = 3500
+            });
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Log($"OnCaptureDesktopWorkspaceClick error: {ex.Message}");
         }
     }
 
@@ -2323,6 +2356,7 @@ public partial class MainWindow : Window
         try { _islandModule?.Dispose(); } catch { }
         try { _clockWidget?.Close(); } catch { }
         try { _wallpaperModule?.Dispose(); } catch { }
+        try { _workspaceModule?.Dispose(); } catch { }
         try { _wallpaperManager?.DisposeWallpapers(); } catch { }
 
         // 5. Unhook keyboard/mouse hooks and close IPC
