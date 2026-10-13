@@ -16,8 +16,11 @@ public class FullscreenDetector : IDisposable
 
     public bool IsFullscreen => _isFullscreen;
 
-    public FullscreenDetector(int pollIntervalMs = 250)
+    private readonly Bus.IHubBus? _bus;
+
+    public FullscreenDetector(Bus.IHubBus? bus = null, int pollIntervalMs = 250)
     {
+        _bus = bus;
         _currentProcessId = (uint)Process.GetCurrentProcess().Id;
         _timer = new System.Threading.Timer(CheckState, null, Timeout.Infinite, Timeout.Infinite);
     }
@@ -164,6 +167,7 @@ public class FullscreenDetector : IDisposable
         {
             _isFullscreen = isFullscreen;
             FullscreenChanged?.Invoke(isFullscreen);
+            _bus?.Publish(new Bus.FullscreenChanged(isFullscreen, IntPtr.Zero));
         }
     }
 
