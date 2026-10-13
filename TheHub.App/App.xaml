@@ -6,6 +6,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/TheHub.Design;component/Tokens.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/TheHub.Design;component/Controls/CoreControls.xaml"/>
                 <ResourceDictionary Source="ThemeDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         <!-- Shadcn UI Slider Styles (Global) -->

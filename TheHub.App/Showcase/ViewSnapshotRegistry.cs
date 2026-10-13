@@ -52,6 +52,24 @@ public class ViewSnapshotRegistry
     private void RegisterAllSnapshots()
     {
         // =========================================================================
+        // 0. DESIGN SYSTEM & CORE CONTROLS (DESIGN_SYSTEM.md)
+        // =========================================================================
+
+        _items.Add(new ViewSnapshotItem
+        {
+            Id = "design_core_controls",
+            Title = "Design System: Core Controls & Tokens",
+            Category = "Design System",
+            BadgeColor = "#3B82F6",
+            StateTag = "Tokens & Controls",
+            Description = "Unified component catalog featuring SectionHeader, SettingRow, HubButtons, HubToggle, and HubCard matching DESIGN_SYSTEM.md.",
+            Tags = new[] { "Design", "Tokens", "Controls", "Buttons", "Header", "Toggles" },
+            TargetWidth = 900,
+            TargetHeight = 600,
+            PreviewElementFactory = () => new ControlsShowcaseView()
+        });
+
+        // =========================================================================
         // 1. DYNAMIC ISLAND (ALL STATES: COMPACT, EXPANDED, EVENTS, SLIDERS, DRAWER)
         // =========================================================================
 

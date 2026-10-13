@@ -1,0 +1,65 @@
+<UserControl x:Class="TheHub.App.Showcase.ControlsShowcaseView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:TheHub.Design.Controls;assembly=TheHub.Design"
+             Background="{StaticResource Brush.Bg.Window}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24" MaxWidth="1100">
+            <!-- 1. Header with Wrapping Actions -->
+            <controls:SectionHeader Title="Design System Controls"
+                                    Subtitle="Official controls catalog matching DESIGN_SYSTEM.md specifications.">
+                <controls:SectionHeader.Actions>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Secondary" Style="{StaticResource HubButton.Secondary}" Margin="0,0,8,0"/>
+                        <Button Content="Primary Action" Style="{StaticResource HubButton.Primary}"/>
+                    </StackPanel>
+                </controls:SectionHeader.Actions>
+            </controls:SectionHeader>
+
+            <!-- 2. Button Hierarchy Card -->
+            <Border Style="{StaticResource HubCard}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="BUTTON VARIANTS" Style="{StaticResource Text.Section}" Margin="0,0,0,12"/>
+                    <WrapPanel Orientation="Horizontal">
+                        <Button Content="Primary" Style="{StaticResource HubButton.Primary}" Margin="0,0,10,10"/>
+                        <Button Content="Secondary" Style="{StaticResource HubButton.Secondary}" Margin="0,0,10,10"/>
+                        <Button Content="Ghost Button" Style="{StaticResource HubButton.Ghost}" Margin="0,0,10,10"/>
+                        <Button Content="Kill Switch (Danger)" Style="{StaticResource HubButton.Danger}" Margin="0,0,10,10"/>
+                        <Button Content="Disabled" Style="{StaticResource HubButton.Primary}" IsEnabled="False" Margin="0,0,10,10"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 3. Setting Rows Card -->
+            <Border Style="{StaticResource HubCard}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="SETTING ROWS &amp; TOGGLES" Style="{StaticResource Text.Section}" Margin="0,0,0,12"/>
+                    <controls:SettingRow Title="Performance Mode"
+                                         Description="Reduce animations and switch physics springs to fast 120ms fades.">
+                        <controls:SettingRow.ControlContent>
+                            <CheckBox Style="{StaticResource HubToggle}"/>
+                        </controls:SettingRow.ControlContent>
+                    </controls:SettingRow>
+
+                    <controls:SettingRow Title="Fullscreen Protection"
+                                         Description="Automatically hide overlay radial wheel and widgets during fullscreen games.">
+                        <controls:SettingRow.ControlContent>
+                            <CheckBox Style="{StaticResource HubToggle}" IsChecked="True"/>
+                        </controls:SettingRow.ControlContent>
+                    </controls:SettingRow>
+
+                    <controls:SettingRow Title="Theme Profile"
+                                         Description="Selected visual theme accent and surface style.">
+                        <controls:SettingRow.ControlContent>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="Black Glass" Style="{StaticResource HubChip}" IsChecked="True"/>
+                                <RadioButton Content="Slate" Style="{StaticResource HubChip}"/>
+                                <RadioButton Content="Minimal" Style="{StaticResource HubChip}"/>
+                            </StackPanel>
+                        </controls:SettingRow.ControlContent>
+                    </controls:SettingRow>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

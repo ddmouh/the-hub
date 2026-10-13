@@ -1,0 +1,22 @@
+<UserControl x:Class="TheHub.Design.Controls.SectionHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Non-colliding, wrapping header layout per DESIGN_SYSTEM.md §5 & §7 -->
+    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <StackPanel Margin="0,0,16,8" VerticalAlignment="Center" MinWidth="240">
+            <TextBlock x:Name="TxtTitle"
+                       Style="{StaticResource Text.Title}"
+                       TextWrapping="Wrap"
+                       TextTrimming="CharacterEllipsis"/>
+            <TextBlock x:Name="TxtSubtitle"
+                       Style="{StaticResource Text.Caption}"
+                       Margin="0,3,0,0"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed"/>
+        </StackPanel>
+
+        <ContentPresenter x:Name="ActionsHost"
+                          VerticalAlignment="Center"
+                          Margin="0,0,0,8"/>
+    </WrapPanel>
+</UserControl>
