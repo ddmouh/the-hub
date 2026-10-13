@@ -1,9 +1,12 @@
 using System.IO;
-using System.Text.Json;
 using TheHub.Common.Models;
 
 namespace TheHub.Common.Config;
 
+/// <summary>
+/// Backward-compatible adapter façade over SectionSettingsStore.
+/// Keeps existing call sites fully functional while storing configuration across section JSON files.
+/// </summary>
 public class SettingsManager
 {
     private static readonly string SettingsDirectory = Path.Combine(
@@ -11,18 +14,26 @@ public class SettingsManager
         "TheHub"
     );
 
-    private static readonly string SettingsFilePath = Path.Combine(SettingsDirectory, "settings.json");
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true
-    };
-
+    private static SectionSettingsStore? _store;
     private static AppSettings? _cachedSettings;
     private static readonly object LockObj = new();
 
     public static event Action<AppSettings>? OnSettingsChanged;
+
+    public static SectionSettingsStore Store
+    {
+        get
+        {
+            if (_store == null)
+            {
+                lock (LockObj)
+                {
+                    _store ??= new SectionSettingsStore(SettingsDirectory);
+                }
+            }
+            return _store;
+        }
+    }
 
     public static AppSettings Current
     {
@@ -41,48 +52,34 @@ public class SettingsManager
 
     public static AppSettings LoadSettings()
     {
-        try
+        lock (LockObj)
         {
-            if (File.Exists(SettingsFilePath))
+            Store.LoadAll(msg => System.Diagnostics.Debug.WriteLine(msg));
+            var settings = Store.ToAppSettings();
+
+            if (settings.RadialProfiles == null || settings.RadialProfiles.Count == 0)
             {
-                string json = File.ReadAllText(SettingsFilePath);
-                var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
-                if (settings != null)
+                var defaultShortcuts = (settings.LauncherShortcuts != null && settings.LauncherShortcuts.Count > 0)
+                    ? settings.LauncherShortcuts
+                    : AppSettings.CreateDefault().LauncherShortcuts;
+
+                settings.RadialProfiles = new List<RadialWheelProfile>
                 {
-                    if (settings.RadialProfiles == null || settings.RadialProfiles.Count == 0)
+                    new()
                     {
-                        var defaultShortcuts = (settings.LauncherShortcuts != null && settings.LauncherShortcuts.Count > 0)
-                            ? settings.LauncherShortcuts
-                            : AppSettings.CreateDefault().LauncherShortcuts;
-
-                        settings.RadialProfiles = new List<RadialWheelProfile>
-                        {
-                            new()
-                            {
-                                Name = "Main Wheel",
-                                IconGlyph = "🎯",
-                                AccentColor = "#3B82F6",
-                                IsActive = true,
-                                IsVisibleInSwitcher = true,
-                                Slices = new(defaultShortcuts)
-                            }
-                        };
+                        Name = "Main Wheel",
+                        IconGlyph = "🎯",
+                        AccentColor = "#3B82F6",
+                        IsActive = true,
+                        IsVisibleInSwitcher = true,
+                        Slices = new(defaultShortcuts)
                     }
-
-                    _cachedSettings = settings;
-                    return settings;
-                }
+                };
             }
-        }
-        catch (Exception)
-        {
-            // Fall back to defaults on corrupt file
-        }
 
-        var defaultSettings = AppSettings.CreateDefault();
-        SaveSettings(defaultSettings);
-        _cachedSettings = defaultSettings;
-        return defaultSettings;
+            _cachedSettings = settings;
+            return settings;
+        }
     }
 
     public static void SaveSettings(AppSettings? settings = null)
@@ -94,14 +91,7 @@ public class SettingsManager
 
             try
             {
-                if (!Directory.Exists(SettingsDirectory))
-                {
-                    Directory.CreateDirectory(SettingsDirectory);
-                }
-
-                var json = JsonSerializer.Serialize(settings, JsonOptions);
-                File.WriteAllText(SettingsFilePath, json);
-
+                Store.SaveAllFromAppSettings(settings);
                 OnSettingsChanged?.Invoke(settings);
             }
             catch (Exception ex)
