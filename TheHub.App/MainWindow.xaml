@@ -582,24 +582,18 @@
                                     <!-- Multi-Monitor Selector Card (Display Layout matching Windows Settings) -->
                                     <Border Background="#16191E" BorderBrush="#252A33" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
                                         <StackPanel>
-                                            <Grid Margin="0,0,0,12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="🖥️" FontSize="14" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="TARGET DISPLAY" FontSize="11.5" FontWeight="Bold" Foreground="#FFFFFF"/>
-                                                    </StackPanel>
+                                            <WrapPanel Margin="0,0,0,12" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,8" MinWidth="180">
+                                                    <TextBlock Text="🖥️" FontSize="14" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="TARGET DISPLAY" FontSize="11.5" FontWeight="Bold" Foreground="#FFFFFF"/>
                                                 </StackPanel>
                                                 
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,8">
                                                     <Button Content="+ Add Wallpaper" Style="{StaticResource PrimaryButtonStyle}" Padding="14,7" Margin="0,0,8,0" Click="OnAddWallpaperClick" ToolTip="Add an animated video (MP4, WebM, GIF) or static image (JPG, PNG)"/>
                                                     <Button Content="🔄 Refresh Displays" Style="{StaticResource SmallActionButtonStyle}" Click="OnRefreshDisplaysClick" Margin="0,0,8,0" ToolTip="Detect newly connected monitors"/>
                                                     <Button Content="🛑 Clear Display Wallpaper" Style="{StaticResource SmallActionButtonStyle}" Foreground="#F87171" Click="OnClearCurrentDisplayWallpaperClick" ToolTip="Clear and reset wallpaper on the selected display target"/>
-                                                </StackPanel>
-                                            </Grid>
+                                                </WrapPanel>
+                                            </WrapPanel>
 
                                             <!-- Display Buttons Row (mini-monitors) -->
                                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
