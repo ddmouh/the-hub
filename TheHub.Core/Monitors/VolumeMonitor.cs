@@ -28,7 +28,7 @@ public class VolumeMonitor : IDisposable
     {
         try
         {
-            InitializeCoreAudio();
+            Task.Run(() => InitializeCoreAudio());
         }
         catch (Exception ex)
         {
@@ -94,7 +94,7 @@ public class VolumeMonitor : IDisposable
         {
             if (!_isInitialized)
             {
-                InitializeCoreAudio();
+                Task.Run(() => InitializeCoreAudio());
             }
 
             if (_audioEndpointVolume != null)

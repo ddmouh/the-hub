@@ -26,5 +26,6 @@
 | 2026-10-28 | Fix Startup Freeze & Hardware Widget Overlap | Eliminated synchronous Process counter scans on UI thread; disabled default widget auto-spawn | Completed |
 | 2026-10-28 | Smart Close Button (Hold-to-Exit) | Single click hides to tray; ~1.1s hold terminates entire application and background overlays | Completed |
 | 2026-10-28 | Architectural Re-alignment & Foundation Audit | Paused UI micro-tweaks to review foundational architecture; reconciled status vs reality | Completed |
-| 2026-10-28 | P1.9 / P6.4: Shell Decoupling & Page Extraction | Extract pages from MainWindow.xaml into UserControls; bring MainWindow.xaml.cs < 400 lines | **Active / In-Progress** |
+| 2026-10-28 | P1.9 / P6.4: Shell Decoupling & Page Extraction | Extract pages from MainWindow.xaml into UserControls; bring MainWindow.xaml.cs < 450 lines | Completed |
+| 2026-10-29 | HoldToConfirmButton & Zero-Latency Startup | Native spring physics HoldToConfirm button for Close [X] and destructive actions; async module init; unified widget state | Completed |
 | 2026-10-28 | Single Source of Truth Documentation | Created canonical README.md, cleaned duplicate docs, updated ARCHITECTURE.md and PRD | Completed |

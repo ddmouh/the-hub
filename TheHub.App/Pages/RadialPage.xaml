@@ -1,0 +1,571 @@
+<UserControl x:Class="TheHub.App.Pages.RadialPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:controls="clr-namespace:TheHub.App.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="1200" d:DesignWidth="850">
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Header & Action Buttons -->
+            <RowDefinition Height="Auto"/>
+            <!-- Sub Tabs Selector -->
+            <RowDefinition Height="Auto"/>
+            <!-- Active Sub Tab Content -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Radial Wheel Studio" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF"/>
+                <TextBlock Text="Configure triggers, gestures, visual metrics, workspaces editor, and high-performance settings." FontSize="12" Foreground="#71717A" Margin="0,3,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Sub Tabs Navigation (Rovyl Style) -->
+        <Border Grid.Row="1" Background="#111114" BorderBrush="#1F1F24" BorderThickness="1" CornerRadius="8" Padding="4" Margin="0,0,0,16">
+            <UniformGrid Columns="3">
+                <RadioButton x:Name="TabBtnActivation" Content="⚡ Activation" Style="{StaticResource SubNavRadioButtonStyle}" IsChecked="True" Checked="OnRadialSubTabChanged" Tag="0"/>
+                <RadioButton x:Name="TabBtnAppearance" Content="🎨 Appearance" Style="{StaticResource SubNavRadioButtonStyle}" Checked="OnRadialSubTabChanged" Tag="1"/>
+                <RadioButton x:Name="TabBtnWorkspaces" Content="🎯 Wheel Slices" Style="{StaticResource SubNavRadioButtonStyle}" Checked="OnRadialSubTabChanged" Tag="2"/>
+            </UniformGrid>
+        </Border>
+
+        <!-- Sub Tab Panels Container -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,-6,0">
+            <StackPanel Margin="0,0,6,16">
+
+                <!-- ======================================================== -->
+                <!-- 2. ACTIVATION PANEL                                      -->
+                <!-- ======================================================== -->
+                <StackPanel x:Name="SubPanelActivation" Visibility="Visible">
+
+                    <!-- Global Shortcut (Keyboard) -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="Global Shortcut (Keyboard)" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Capture hotkey or single key (e.g. Alt+Z, Alt+Space, X) registered globally across Windows." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBox x:Name="TxtGlobalShortcut" Text="Alt+Z" Style="{StaticResource ModernTextBoxStyle}" Width="110" TextAlignment="Center" FontWeight="SemiBold" PreviewKeyDown="OnShortcutTextBoxPreviewKeyDown" Margin="0,0,8,0" ToolTip="Click and press keys to record new hotkey"/>
+                                <Button Content="Record" Style="{StaticResource SmallActionButtonStyle}" Padding="10,6" Click="OnRecordShortcutClick" ToolTip="Listen to next pressed key combination"/>
+                                <Button Content="Reset" Style="{StaticResource SmallActionButtonStyle}" Padding="8,6" Margin="4,0,0,0" Click="OnResetShortcutClick" ToolTip="Reset to Alt+Z"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Mouse Trigger Switch -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="Mouse Trigger" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Enable or disable invoking the radial wheel via physical mouse buttons." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkMouseTrigger" Grid.Column="1" Style="{StaticResource ModernToggleSwitch}" IsChecked="True" Checked="OnMouseTriggerToggled" Unchecked="OnMouseTriggerToggled"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Trigger Button Segmented Control -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="Trigger Button" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Select dedicated button without interfering with primary Windows clicks (Left/Right)." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#18181D" BorderBrush="#2A2A33" BorderThickness="1" CornerRadius="8" Padding="3" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RbTriggerWheel" Content="Wheel (Middle)" Style="{StaticResource SegmentedRadioButtonStyle}" IsChecked="True" Checked="OnTriggerButtonChanged" Tag="Middle"/>
+                                    <RadioButton x:Name="RbTriggerBack" Content="Back (Side 1)" Style="{StaticResource SegmentedRadioButtonStyle}" Checked="OnTriggerButtonChanged" Tag="Back"/>
+                                    <RadioButton x:Name="RbTriggerForward" Content="Forward (Side 2)" Style="{StaticResource SegmentedRadioButtonStyle}" Checked="OnTriggerButtonChanged" Tag="Forward"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Gesture Behavior -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="Gesture Behavior" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Click to Toggle (stays open until chosen) or Hold-and-Release (launches upon finger lift)." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#18181D" BorderBrush="#2A2A33" BorderThickness="1" CornerRadius="8" Padding="3" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RbGestureHold" Content="Hold (Flick &amp; Release)" Style="{StaticResource SegmentedRadioButtonStyle}" IsChecked="True" Checked="OnGestureBehaviorChanged" Tag="Hold"/>
+                                    <RadioButton x:Name="RbGestureClick" Content="Click (Stay Open)" Style="{StaticResource SegmentedRadioButtonStyle}" Checked="OnGestureBehaviorChanged" Tag="Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Activation Zone (Deadzone Position Slider) -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Activation Zone (Deadzone)" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Minimum distance from center before selection confirms, preventing accidental triggers." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtActivationZoneValue" Grid.Column="1" Text="60 px" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Slider x:Name="SldActivationZone" Minimum="20" Maximum="120" Value="60" SmallChange="1" LargeChange="10" ValueChanged="OnActivationZoneValueChanged" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Hidden Controls for Settings Binding Compatibility -->
+                <CheckBox x:Name="ChkPrecisionMode" Visibility="Collapsed" Checked="OnPrecisionModeToggled" Unchecked="OnPrecisionModeToggled"/>
+                <CheckBox x:Name="ChkFullscreenProtection" Visibility="Collapsed" IsChecked="True" Checked="OnFullscreenProtectionToggled" Unchecked="OnFullscreenProtectionToggled"/>
+
+                <!-- ======================================================== -->
+                <!-- 3. APPEARANCE PANEL                                      -->
+                <!-- ======================================================== -->
+                <StackPanel x:Name="SubPanelAppearance" Visibility="Collapsed">
+
+                    <!-- Rovyl Surfaces (Theme) -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="Rovyl Surfaces (Theme)" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Settings &amp; controls surface theme. The floating radial wheel remains sleek dark." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#18181D" BorderBrush="#2A2A33" BorderThickness="1" CornerRadius="8" Padding="3" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RbThemeBlack" Content="Black (Zenith)" Style="{StaticResource SegmentedRadioButtonStyle}" IsChecked="True" Checked="OnAppearanceThemeChanged" Tag="Black"/>
+                                    <RadioButton x:Name="RbThemeWhite" Content="White (Clean)" Style="{StaticResource SegmentedRadioButtonStyle}" Checked="OnAppearanceThemeChanged" Tag="White"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Orbital Radius Slider -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Orbital Radius" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Controls the orbit distance of floating tiles from the center hub." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtOrbitalRadiusValue" Grid.Column="1" Text="120 px" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Slider x:Name="SldOrbitalRadius" Minimum="80" Maximum="200" Value="120" SmallChange="2" LargeChange="10" ValueChanged="OnOrbitalRadiusValueChanged" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Tile Size Slider -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Tile Size" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Dimensions of each floating shortcut glass tile." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtTileSizeValue" Grid.Column="1" Text="56 px" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Slider x:Name="SldTileSize" Minimum="40" Maximum="80" Value="56" SmallChange="2" LargeChange="8" ValueChanged="OnTileSizeValueChanged" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Persistent Labels -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="Persistent Labels" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Keep shortcut title pills always visible around tiles instead of only upon hover." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkPersistentLabels" Grid.Column="1" Style="{StaticResource ModernToggleSwitch}" Checked="OnPersistentLabelsToggled" Unchecked="OnPersistentLabelsToggled"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Wheel Opacity & Background Dimming -->
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Wheel Opacity" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Glass tile and background opacity level." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtWheelOpacityValue" Grid.Column="1" Text="85%" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Slider x:Name="SldWheelOpacity" Minimum="35" Maximum="100" Value="85" SmallChange="1" LargeChange="5" ValueChanged="OnWheelOpacityValueChanged"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#141417" BorderBrush="#222228" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Background Dimming" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Dim fullscreen backdrop overlay to isolate desktop distraction and focus the wheel." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtBackgroundDimmingValue" Grid.Column="1" Text="25%" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Slider x:Name="SldBackgroundDimming" Minimum="0" Maximum="100" Value="25" SmallChange="1" LargeChange="10" ValueChanged="OnBackgroundDimmingValueChanged"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ======================================================== -->
+                <!-- 4. WORKSPACES & WHEEL CUSTOMIZER PANEL                   -->
+                <!-- ======================================================== -->
+                <StackPanel x:Name="SubPanelWorkspaces" Visibility="Collapsed">
+
+                    <!-- Header Section (Wheel Profiles & Slices) -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="Radial Wheel Profiles &amp; Slices" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <TextBlock Text="Configure the shortcut slices that appear on your Alt+Z radial wheel. Independent from Workspaces." FontSize="12" Foreground="#71717A" Margin="0,3,0,0"/>
+                        <TextBlock Text="Your Wheel Profiles" FontSize="12.5" FontWeight="SemiBold" Foreground="#D4D4D8" Margin="0,14,0,0"/>
+                    </StackPanel>
+
+                    <!-- Workspace Cards Grid -->
+                    <WrapPanel x:Name="WorkspacesCardsPanel" Orientation="Horizontal" Margin="0,0,0,16">
+                        <ItemsControl x:Name="WorkspacesCardsControl">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="205" Height="185" Margin="0,0,14,14"
+                                            Background="{Binding CardBackground}"
+                                            BorderBrush="{Binding BorderBrushColor}"
+                                            BorderThickness="{Binding BorderThicknessValue}"
+                                            CornerRadius="14"
+                                            Cursor="Hand"
+                                            MouseLeftButtonDown="OnSelectWorkspaceCardClick"
+                                            Tag="{Binding}">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#17171D"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid Margin="10,8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="105"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Top: Mini Radial Preview -->
+                                            <controls:MiniRadialPreview Grid.Row="0"
+                                                                        Apps="{Binding Apps}"
+                                                                        CenterColor="{Binding AccentColor}"
+                                                                        IsActive="{Binding IsActive}"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Width="180" Height="105"/>
+
+                                            <!-- Bottom: Details -->
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                                    <Border Background="#1D1D24" BorderBrush="#2F2F3D" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding HotkeyIndex}" FontSize="10" FontWeight="SemiBold" Foreground="#A1A1AA"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding ShortcutCountText}" FontSize="11" Foreground="#71717A" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- "+ New workspace" Card Tile -->
+                        <Border Width="205" Height="185" Margin="0,0,14,14"
+                                Background="#0E0E12"
+                                BorderBrush="#24242C"
+                                BorderThickness="1"
+                                CornerRadius="14"
+                                Cursor="Hand"
+                                MouseLeftButtonDown="OnCreateNewWorkspaceCardClick">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="BorderBrush" Value="#3F3F50"/>
+                                            <Setter Property="Background" Value="#14141A"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="+" FontSize="28" Foreground="#71717A" HorizontalAlignment="Center"/>
+                                <TextBlock Text="New wheel profile" FontSize="12" Foreground="#71717A" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+
+                    <!-- Workspace Configuration & Wheel Slices Section -->
+                    <Border x:Name="WorkspaceEditorSection"
+                            Background="#131317" BorderBrush="#24242C" BorderThickness="1" CornerRadius="12"
+                            Padding="20" Margin="0,4,0,24">
+                        <StackPanel>
+                            <!-- Editor Header -->
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left: Icon + Name + Color Picker -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Width="38" Height="38" Background="#1B1B22" BorderBrush="#2A2A34" BorderThickness="1" CornerRadius="8" Margin="0,0,12,0" VerticalAlignment="Center">
+                                        <TextBlock x:Name="WsEditorIconText" Text="🎯" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox x:Name="WsEditorNameBox" Style="{StaticResource ModernTextBoxStyle}" Width="160" FontSize="14" FontWeight="SemiBold" TextChanged="OnWsEditorNameChanged" Margin="0,0,12,0"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border x:Name="WsEditorColorSwatch"
+                                                        Width="22" Height="22" CornerRadius="11"
+                                                        Background="#3B82F6"
+                                                        BorderBrush="#FFFFFF" BorderThickness="1.5"
+                                                        Margin="0,0,6,0"
+                                                        ToolTip="Current accent color"/>
+                                                <Button x:Name="BtnWsEditorOpenColorPicker"
+                                                        Width="26" Height="26"
+                                                        Cursor="Hand"
+                                                        ToolTip="Pick accent color"
+                                                        Click="OnWsEditorOpenColorPickerClick">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="PlusBtn"
+                                                                    Width="26" Height="26" CornerRadius="13"
+                                                                    Background="#1B1B28"
+                                                                    BorderBrush="#3B82F6" BorderThickness="1.5">
+                                                                <TextBlock Text="+"
+                                                                           FontSize="15" Foreground="#3B82F6"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontWeight="Bold"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="PlusBtn" Property="Background" Value="#242436"/>
+                                                                    <Setter TargetName="PlusBtn" Property="BorderBrush" Value="#60A5FA"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <!-- ColorPicker Popup -->
+                                                <Popup x:Name="WsEditorColorPickerPopup"
+                                                       PlacementTarget="{Binding ElementName=BtnWsEditorOpenColorPicker}"
+                                                       Placement="Bottom"
+                                                       StaysOpen="False"
+                                                       AllowsTransparency="True"
+                                                       PopupAnimation="Fade">
+                                                    <Border Background="#101015"
+                                                            BorderBrush="#2C2C38" BorderThickness="1"
+                                                            CornerRadius="10" Padding="10">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect BlurRadius="18" Direction="270"
+                                                                              ShadowDepth="4"
+                                                                              Color="#000000" Opacity="0.65"/>
+                                                        </Border.Effect>
+                                                        <controls:ColorPickerControl x:Name="WsEditorColorPicker"
+                                                                                    ColorChanged="OnWsEditorColorPickerChanged"/>
+                                                    </Border>
+                                                </Popup>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <TextBlock x:Name="WsEditorSubtitle" Text="Configure the wheel slices for this profile" FontSize="11" Foreground="#71717A" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Right: Actions -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="WsEditorVisibilityBtn" Content="👁️ In Switcher" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" Click="OnWsEditorToggleVisibilityClick" ToolTip="Show/hide in radial switcher"/>
+                                    <Button Content="▶ Launch All" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" Click="OnWsEditorLaunchAllClick" ToolTip="Launch all applications in this wheel"/>
+                                    <Button x:Name="WsEditorDeleteBtn" Content="🗑️ Delete" Style="{StaticResource DangerButtonStyle}" Padding="12,6" Click="OnWsEditorDeleteClick" ToolTip="Delete this wheel profile"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Background="#202026" Margin="0,0,0,16"/>
+
+                            <!-- Two Columns: Slices (Left) and Add (Right) -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.1*"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="1.4*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- LEFT COLUMN: Slices currently inside this wheel -->
+                                <StackPanel Grid.Column="0">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="WHEEL SLICES" FontSize="11" FontWeight="Bold" Foreground="#71717A" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="WsEditorSliceCountText" Grid.Column="1" Text="4 items" FontSize="11" Foreground="#3B82F6" FontWeight="SemiBold"/>
+                                    </Grid>
+
+                                    <!-- List of current apps in this wheel -->
+                                    <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl x:Name="WsEditorCurrentAppsList">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#17171D" BorderBrush="#25252E" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Icon -->
+                                                            <Border Grid.Column="0" Width="28" Height="28" Background="#222228" CornerRadius="6" Margin="0,0,10,0">
+                                                                <TextBlock Text="{Binding IconGlyph}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+
+                                                            <!-- Details -->
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                                                <TextBlock Text="{Binding ExecutablePath}" FontSize="10.5" Foreground="#71717A" TextTrimming="CharacterEllipsis"/>
+                                                            </StackPanel>
+
+                                                            <!-- Actions -->
+                                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <Button Content="▲" Style="{StaticResource SmallActionButtonStyle}" Padding="6,3" Margin="0,0,3,0" Tag="{Binding}" Click="OnWsSliceMoveUpClick" ToolTip="Move up (counter-clockwise)"/>
+                                                                <Button Content="▼" Style="{StaticResource SmallActionButtonStyle}" Padding="6,3" Margin="0,0,6,0" Tag="{Binding}" Click="OnWsSliceMoveDownClick" ToolTip="Move down (clockwise)"/>
+                                                                <Button Content="✕" Style="{StaticResource SmallActionButtonStyle}" Foreground="#F87171" Padding="7,3" Tag="{Binding}" Click="OnWsSliceRemoveClick" ToolTip="Remove from wheel"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <TextBlock x:Name="WsEditorEmptyPrompt" Text="No shortcuts in this wheel yet. Add from the right panel!" FontSize="11" Foreground="#71717A" HorizontalAlignment="Center" Margin="0,16,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+
+                                <!-- RIGHT COLUMN: Add Applications to Wheel -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="ADD SHORTCUTS TO WHEEL" FontSize="11" FontWeight="Bold" Foreground="#71717A" Margin="0,0,0,10"/>
+
+                                    <!-- Source Selector Tabs -->
+                                    <Border Background="#18181F" BorderBrush="#272732" BorderThickness="1" CornerRadius="8" Padding="3" Margin="0,0,0,10">
+                                        <UniformGrid Columns="3">
+                                            <RadioButton x:Name="RbSourceInstalled" Content="💻 Installed Apps" Style="{StaticResource SegmentedRadioButtonStyle}" IsChecked="True" Checked="OnAddSourceTabChanged" Tag="Installed"/>
+                                            <RadioButton x:Name="RbSourceFile" Content="📁 File / Folder" Style="{StaticResource SegmentedRadioButtonStyle}" Checked="OnAddSourceTabChanged" Tag="File"/>
+                                            <RadioButton x:Name="RbSourceUrl" Content="🌐 Web URL" Style="{StaticResource SegmentedRadioButtonStyle}" Checked="OnAddSourceTabChanged" Tag="URL"/>
+                                        </UniformGrid>
+                                    </Border>
+
+                                    <!-- Panel 1: Installed Apps Filter & Add -->
+                                    <StackPanel x:Name="PanelAddInstalled">
+                                        <TextBox x:Name="TxtInstalledFilter" Style="{StaticResource ModernTextBoxStyle}" TextChanged="OnInstalledFilterChanged" Margin="0,0,0,8"/>
+                                        <ScrollViewer MaxHeight="255" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl x:Name="ListInstalledAppsSuggestions">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#16161C" BorderBrush="#22222A" BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,0,0,5">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding IconGlyph}" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                                                </StackPanel>
+                                                                <Button Grid.Column="2" Content="+ Add to Wheel" Style="{StaticResource PrimaryButtonStyle}" Padding="8,3" FontSize="10.5" Tag="{Binding}" Click="OnAddInstalledAppToCurrentWsClick"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </StackPanel>
+
+                                    <!-- Panel 2: File / Folder Browse -->
+                                    <StackPanel x:Name="PanelAddFile" Visibility="Collapsed">
+                                        <Border Background="#16161C" BorderBrush="#22222A" BorderThickness="1" CornerRadius="8" Padding="14">
+                                            <StackPanel>
+                                                <TextBlock Text="Add an executable (.exe) or folder directly:" FontSize="11.5" Foreground="#9CA3AF" Margin="0,0,0,12"/>
+                                                <Button Content="📂 Browse Executable Application (.exe)..." Style="{StaticResource PrimaryButtonStyle}" Padding="12,8" Margin="0,0,0,8" Click="OnBrowseExeForCurrentWsClick"/>
+                                                <Button Content="📁 Browse Folder Directory..." Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Click="OnBrowseFolderForCurrentWsClick"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- Panel 3: Web URL -->
+                                    <StackPanel x:Name="PanelAddUrl" Visibility="Collapsed">
+                                        <Border Background="#16161C" BorderBrush="#22222A" BorderThickness="1" CornerRadius="8" Padding="14">
+                                            <StackPanel>
+                                                <TextBlock Text="Web Page / Service URL:" FontSize="11" Foreground="#A1A1AA" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="TxtCustomUrl" Style="{StaticResource ModernTextBoxStyle}" Text="https://" Margin="0,0,0,8"/>
+                                                <TextBlock Text="Title / Display Name:" FontSize="11" Foreground="#A1A1AA" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="TxtCustomUrlTitle" Style="{StaticResource ModernTextBoxStyle}" Text="YouTube" Margin="0,0,0,12"/>
+                                                <Button Content="+ Add Web Shortcut to Wheel" Style="{StaticResource PrimaryButtonStyle}" Padding="12,7" Click="OnAddUrlForCurrentWsClick"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

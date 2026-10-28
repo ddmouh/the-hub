@@ -1,0 +1,169 @@
+<UserControl x:Class="TheHub.App.Pages.IslandPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="1200" d:DesignWidth="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="False" MinHeight="0">
+        <StackPanel Margin="0,0,10,20">
+            <TextBlock Text="Dynamic Island Settings" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF"/>
+            <TextBlock Text="Configure events, size, positioning, hover quick controls, and live stream tracking." FontSize="12.5" Foreground="#71717A" Margin="0,4,0,20"/>
+
+            <!-- Font Selector Card -->
+            <Border Background="#141416" BorderBrush="#27272A" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="180"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Dynamic Island Font" FontSize="12.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                        <TextBlock Text="Typography used by notification banners and controls." FontSize="11" Foreground="#71717A" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <ComboBox x:Name="CmbDynamicIslandFont" Grid.Column="1" SelectedIndex="0" SelectionChanged="OnDynamicIslandFontChanged" Style="{StaticResource DarkComboBoxStyle}"/>
+                </Grid>
+            </Border>
+
+            <!-- Section 1: Events & Tracking -->
+            <Border Background="#141416" BorderBrush="#27272A" BorderThickness="1" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="EVENT &amp; ACTIVITY TRACKING" FontSize="11" FontWeight="Bold" Foreground="#71717A" Margin="0,0,0,12"/>
+                    <CheckBox x:Name="ChkMedia" Content="Track Media playback (Spotify, Chrome, YouTube)" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,10" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                    <CheckBox x:Name="ChkShowActiveApp" Content="Show Active Stream &amp; App in Compact Mode (YouTube, Twitch, Games, Discord, Coding)" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,10" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                    <CheckBox x:Name="ChkVolume" Content="Show Volume adjustment capsule" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,10" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                    <CheckBox x:Name="ChkClipboard" Content="Show Clipboard copied notices" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,10" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                    <CheckBox x:Name="ChkUsb" Content="Show USB device plug/unplug events" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,10" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                    <CheckBox x:Name="ChkAlwaysShowFullscreen" Content="Always Keep Dynamic Island visible on top of Fullscreen (Overrides Hide)" IsChecked="False" Foreground="#FFFFFF" Margin="0,0,0,6" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Section 2: Display Screen Selection & Position -->
+            <Border Background="#141416" BorderBrush="#27272A" BorderThickness="1" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="TARGET DISPLAY &amp; FREE POSITIONING" FontSize="11" FontWeight="Bold" Foreground="#71717A" Margin="0,0,0,12"/>
+                    
+                    <!-- Screen Selector -->
+                    <TextBlock Text="Target Display Screen" FontSize="12.5" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                    <TextBlock Text="Choose which monitor the Dynamic Island is anchored to. Fullscreen detection will only hide the island if a fullscreen window is on this exact screen!" FontSize="11" Foreground="#71717A" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                    <ComboBox x:Name="CmbIslandMonitor" Style="{StaticResource DarkComboBoxStyle}" Width="360" HorizontalAlignment="Left" Margin="0,0,0,16" SelectionChanged="OnIslandMonitorSelectionChanged"/>
+
+                    <!-- Size Scale Slider -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Island Size Scale (تكبير / تصغير الجزيرة)" FontSize="12" Foreground="#FFFFFF"/>
+                        <TextBlock x:Name="TxtScaleValue" Grid.Column="1" Text="100%" FontSize="12" FontWeight="SemiBold" Foreground="#60A5FA"/>
+                    </Grid>
+                    <Slider x:Name="SldIslandScale" Minimum="0.7" Maximum="1.5" SmallChange="0.05" LargeChange="0.1" Value="1.0" Margin="0,0,0,16" ValueChanged="OnIslandScaleChanged"/>
+
+                    <!-- Top Offset Slider -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Vertical Distance from Top (المسافة من أعلى الشاشة)" FontSize="12" Foreground="#FFFFFF"/>
+                        <TextBlock x:Name="TxtTopValue" Grid.Column="1" Text="12 px" FontSize="12" FontWeight="SemiBold" Foreground="#60A5FA"/>
+                    </Grid>
+                    <Slider x:Name="SldIslandTop" Minimum="0" Maximum="120" SmallChange="2" LargeChange="10" Value="12" Margin="0,0,0,16" ValueChanged="OnIslandTopChanged"/>
+
+                    <!-- Dragging & Reset Controls -->
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <CheckBox x:Name="ChkLockPosition" Content="🔒 Lock Island Position (Prevent Dragging)" Foreground="#E4E4E7" FontSize="12" Margin="0,0,20,0" VerticalAlignment="Center" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                        <Button Content="🎯 Reset Position to Screen Center" Style="{StaticResource SecondaryButtonStyle}" Padding="14,6" Click="OnResetIslandPositionClick" ToolTip="Center the Dynamic Island horizontally at the top of the monitor"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Section 3: Hover Quick Controls -->
+            <Border Background="#141416" BorderBrush="#27272A" BorderThickness="1" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="HOVER QUICK CONTROLS BAR (أزرار التحكم عند وضع الماوس)" FontSize="11" FontWeight="Bold" Foreground="#71717A" Margin="0,0,0,4"/>
+                            <TextBlock Text="Customize which interactive control elements are shown when expanding the Dynamic Island" FontSize="11" Foreground="#A1A1AA"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="⚡ Preview Live" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Click="OnPreviewIslandClick" ToolTip="Trigger live interactive preview of Dynamic Island"/>
+                    </Grid>
+
+                    <!-- Option 1: Quick Controls Row -->
+                    <Border Background="#18181E" BorderBrush="#2A2A36" BorderThickness="1" CornerRadius="10" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="26" Height="26" Background="#23232D" CornerRadius="6" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="🎛️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,12,0">
+                                <TextBlock Text="Show Quick Controls bar when mouse hovers on Dynamic Island" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Displays the action row with Mic Mute and Deafen buttons at the bottom of the island" FontSize="10.5" Foreground="#71717A" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkShowQuickControls" Grid.Column="2" VerticalAlignment="Center" IsChecked="True" Foreground="#FFFFFF" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Option 2: Mic Mute Button -->
+                    <Border Background="#18181E" BorderBrush="#2A2A36" BorderThickness="1" CornerRadius="10" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="26" Height="26" Background="#23232D" CornerRadius="6" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="🎙️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,12,0">
+                                <TextBlock Text="Include Microphone Mute button (🎙️ / 🎤)" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Instant toggle to mute/unmute Windows system microphone input with green/red status" FontSize="10.5" Foreground="#71717A" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkShowMicMute" Grid.Column="2" VerticalAlignment="Center" IsChecked="True" Foreground="#FFFFFF" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Option 3: Screen Brightness -->
+                    <Border Background="#18181E" BorderBrush="#2A2A36" BorderThickness="1" CornerRadius="10" Padding="14,12" Margin="0,0,0,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="26" Height="26" Background="#23232D" CornerRadius="6" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="☀️" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,12,0">
+                                <TextBlock Text="Include Screen Brightness controls (🔅 / 🔆)" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Live hardware DDC/CI monitor brightness slider with instant percentage readout" FontSize="10.5" Foreground="#71717A" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkShowBrightness" Grid.Column="2" VerticalAlignment="Center" IsChecked="True" Foreground="#FFFFFF" Checked="OnSettingToggled" Unchecked="OnSettingToggled"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Section 4: Live Event Simulators -->
+            <Border Background="#141416" BorderBrush="#27272A" BorderThickness="1" CornerRadius="12" Padding="18">
+                <StackPanel>
+                    <TextBlock Text="LIVE EVENT SIMULATORS" FontSize="11" FontWeight="Bold" Foreground="#71717A" Margin="0,0,0,12"/>
+                    <WrapPanel>
+                        <Button Content="Simulate Spotify 'Blinding Lights'" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Click="OnTestMediaIslandClick"/>
+                        <Button Content="Simulate Volume Level (75%)" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Click="OnTestVolumeIslandClick"/>
+                        <Button Content="Simulate Clipboard Copy" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Click="OnTestClipboardIslandClick"/>
+                        <Button Content="Simulate Pomodoro (25:00)" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Click="OnTestTimerIslandClick"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

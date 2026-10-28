@@ -588,6 +588,15 @@ public class OverviewViewModel : INotifyPropertyChanged
     {
         // Load persistent preferences from widgets_config.json
         _config = WidgetsConfig.Load();
+        try
+        {
+            var currentSettings = SettingsManager.Current;
+            _config.IsClockActive = currentSettings.ShowClockWidget;
+            _config.IsCpuActive = currentSettings.ShowCpuWidget;
+            _config.IsGpuActive = currentSettings.ShowGpuWidget;
+            _config.IsRamActive = currentSettings.ShowRamWidget;
+        }
+        catch { }
 
         // Merge user-installed custom fonts into the selectable font list
         RefreshCustomFonts();
@@ -652,6 +661,16 @@ public class OverviewViewModel : INotifyPropertyChanged
     private void SaveConfig()
     {
         _config.Save();
+        try
+        {
+            var settings = SettingsManager.Current;
+            settings.ShowClockWidget = _config.IsClockActive;
+            settings.ShowCpuWidget = _config.IsCpuActive;
+            settings.ShowGpuWidget = _config.IsGpuActive;
+            settings.ShowRamWidget = _config.IsRamActive;
+            SettingsManager.SaveSettings(settings);
+        }
+        catch { }
     }
 
     private void NotifyConfigChanged()

@@ -322,6 +322,12 @@ public class SectionSettingsStore
             WorkspaceSwitchMode = Workspaces.WorkspaceSwitchMode,
             Workspaces = new(Workspaces.Workspaces),
 
+            ShowClockWidget = Widgets.ShowClockWidget,
+            ShowCpuWidget = Widgets.ShowCpuWidget,
+            ShowGpuWidget = Widgets.ShowGpuWidget,
+            ShowRamWidget = Widgets.ShowRamWidget,
+            WidgetsOpacity = Widgets.Opacity * 100.0,
+
             AIEmergencyKillSwitch = Assistant.AIEmergencyKillSwitch,
             AIPermissions = new(Assistant.AIPermissions)
         };
@@ -394,6 +400,13 @@ public class SectionSettingsStore
         Workspaces.WorkspaceSwitchMode = s.WorkspaceSwitchMode ?? "Picker";
         Workspaces.Workspaces = s.Workspaces != null ? new(s.Workspaces) : new();
         SaveSectionDebounced("workspaces.json", Workspaces);
+
+        Widgets.ShowClockWidget = s.ShowClockWidget;
+        Widgets.ShowCpuWidget = s.ShowCpuWidget;
+        Widgets.ShowGpuWidget = s.ShowGpuWidget;
+        Widgets.ShowRamWidget = s.ShowRamWidget;
+        Widgets.Opacity = s.WidgetsOpacity / 100.0;
+        SaveSectionDebounced("widgets.json", Widgets);
 
         Assistant.AIEmergencyKillSwitch = s.AIEmergencyKillSwitch;
         Assistant.AIPermissions = s.AIPermissions != null ? new(s.AIPermissions) : new();
