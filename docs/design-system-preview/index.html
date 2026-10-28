@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Hub — Design System & Interactive Motion Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:wght@400;600&family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Color Tokens from docs/DESIGN_SYSTEM.md */
+      --bg-window: #0B0B0D;
+      --bg-card: #141418;
+      --bg-control: #181820;
+      --bg-raised: #1C1E2A;
+      --border-subtle: #22222B;
+      --border-default: #2A2A38;
+      --border-hover: #3F3F50;
+      --text-primary: #E4E4E7;
+      --text-secondary: #A1A1AA;
+      --text-tertiary: #71717A;
+      --accent: #3B82F6;
+      --accent-hover: #60A5FA;
+      --accent-soft: rgba(59, 130, 246, 0.16);
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --violet: #7C3AED;
+
+      /* Radii */
+      --radius-s: 6px;
+      --radius-m: 10px;
+      --radius-l: 14px;
+      --radius-xl: 20px;
+      --radius-pill: 9999px;
+
+      /* Motion Easings */
+      --ease-snappy: cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      --ease-smooth: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+      --ease-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --fade-fast: 100ms;
+      --fade-base: 160ms;
+      --fade-slow: 260ms;
+
+      /* Font */
+      --font-ui: "Segoe UI Variable Text", "Segoe UI", "Noto Sans Arabic", "Inter", -apple-system, sans-serif;
+      --font-mono: "Cascadia Mono", "Consolas", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-window);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Ambient desktop wallpaper simulation background */
+    .desktop-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: 
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.09) 0%, transparent 60%),
+        radial-gradient(circle at 10% 80%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 90% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+        #0B0B0D;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Navigation */
+    header.top-nav {
+      height: 60px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(11, 11, 13, 0.88);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, var(--accent), #1D4ED8);
+      border-radius: var(--radius-m);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.6px;
+      color: #fff;
+    }
+
+    .brand-badge {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 2px 10px;
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Mode Switcher Tabs in Header */
+    .view-mode-bar {
+      display: flex;
+      background: var(--bg-control);
+      padding: 3px;
+      border-radius: var(--radius-m);
+      border: 1px solid var(--border-subtle);
+      gap: 4px;
+    }
+    .view-mode-btn {
+      padding: 6px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: var(--radius-s);
+      cursor: pointer;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      transition: all var(--fade-fast) ease;
+    }
+    .view-mode-btn.active {
+      background: var(--bg-card);
+      color: #FFFFFF;
+      border: 1px solid var(--border-default);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Standard Buttons */
+    .hub-btn {
+      height: 32px;
+      padding: 0 14px;
+      font-family: var(--font-ui);
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: var(--radius-s);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform var(--fade-fast) var(--ease-snappy), 
+                  border-color var(--fade-fast), 
+                  background-color var(--fade-fast), 
+                  color var(--fade-fast),
+                  box-shadow var(--fade-fast);
+      outline: none;
+      border: 1px solid transparent;
+    }
+
+    .hub-btn:hover {
+      transform: translateY(-1px) scale(1.02);
+    }
+
+    .hub-btn:active {
+      transform: scale(0.96) !important;
+    }
+
+    .hub-btn-primary {
+      background: var(--accent);
+      color: #FFFFFF;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+    }
+    .hub-btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
+    }
+
+    .hub-btn-secondary {
+      background: var(--bg-control);
+      border-color: var(--border-default);
+      color: var(--text-primary);
+    }
+    .hub-btn-secondary:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-raised);
+    }
+
+    .hub-btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .hub-btn-ghost:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .hub-btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+    }
+    .hub-btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Main Container */
+    main.main-content {
+      flex: 1;
+      max-width: 1360px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 32px 28px 80px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    /* Section Headers */
+    .section-head {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .section-tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .section-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Card styling */
+    .hub-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-l);
+      padding: 24px;
+      position: relative;
+      transition: border-color var(--fade-base);
+    }
+    .hub-card:hover {
+      border-color: var(--border-default);
+    }
+
+    /* Grid showcases */
+    .showcase-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 960px) {
+      .showcase-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ====================================================
+       1. HERO: RADIAL LAUNCHER WHEEL
+       ==================================================== */
+    .radial-stage {
+      height: 380px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-xl);
+      background: radial-gradient(circle at center, rgba(30, 34, 50, 0.45) 0%, rgba(11, 11, 13, 0.98) 72%);
+      overflow: hidden;
+    }
+
+    .radial-wheel {
+      width: 290px;
+      height: 290px;
+      position: relative;
+      border-radius: 50%;
+      transition: transform 420ms cubic-bezier(0.34, 1.5, 0.64, 1), opacity var(--fade-base);
+    }
+
+    .radial-center-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: #181922;
+      border: 2px solid var(--border-default);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 28px rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+      z-index: 10;
+      transition: all var(--fade-fast) var(--ease-snappy);
+    }
+    .radial-center-btn:hover {
+      border-color: var(--accent);
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 0 22px rgba(59, 130, 246, 0.4);
+    }
+    .radial-center-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .radial-center-sub {
+      font-size: 9.5px;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Radial slices */
+    .radial-slice {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 58px;
+      height: 58px;
+      margin-left: -29px;
+      margin-top: -29px;
+      border-radius: 50%;
+      background: #15161D;
+      border: 1.5px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      transition: transform 220ms var(--ease-snappy),
+                  border-color 160ms ease,
+                  background-color 160ms ease,
+                  box-shadow 160ms ease;
+    }
+
+    .radial-slice:hover {
+      transform: var(--base-transform) scale(1.22) !important;
+      border-color: var(--accent);
+      background: var(--bg-raised);
+      box-shadow: 0 0 24px rgba(59, 130, 246, 0.5);
+      z-index: 5;
+    }
+
+    .radial-slice .slice-label {
+      position: absolute;
+      bottom: -22px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: all 140ms ease;
+    }
+    .radial-slice:hover .slice-label {
+      opacity: 1;
+      transform: translateY(0);
+      color: #FFFFFF;
+    }
+
+    /* ====================================================
+       2. HERO: DYNAMIC ISLAND LIVE SIMULATOR
+       ==================================================== */
+    .island-stage {
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-xl);
+      background: radial-gradient(circle at center, rgba(20, 20, 26, 0.8) 0%, rgba(11, 11, 13, 0.98) 100%);
+      padding: 40px 20px;
+    }
+
+    .island-stage-hint {
+      position: absolute;
+      bottom: 12px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+    }
+
+    /* Dynamic Island Capsule */
+    .island-capsule {
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.25);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+      cursor: pointer;
+      transform-origin: center top;
+      transition: width 380ms cubic-bezier(0.34, 1.4, 0.64, 1),
+                  height 380ms cubic-bezier(0.34, 1.4, 0.64, 1),
+                  border-radius 380ms cubic-bezier(0.34, 1.4, 0.64, 1),
+                  padding 280ms ease,
+                  transform 160ms var(--ease-snappy);
+    }
+
+    .island-capsule:hover {
+      transform: scale(1.02);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .island-capsule.state-idle {
+      width: 140px;
+      height: 34px;
+      border-radius: 20px;
+      padding: 0 14px;
+    }
+
+    .island-capsule.state-volume {
+      width: 250px;
+      height: 38px;
+      border-radius: 20px;
+      padding: 0 16px;
+    }
+
+    .island-capsule.state-music-compact {
+      width: 290px;
+      height: 42px;
+      border-radius: 22px;
+      padding: 0 16px;
+    }
+
+    .island-capsule.state-music-expanded {
+      width: 380px;
+      height: 146px;
+      border-radius: 28px;
+      padding: 20px;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .island-capsule.state-usb {
+      width: 260px;
+      height: 38px;
+      border-radius: 20px;
+      padding: 0 16px;
+      animation: usbPulse 400ms var(--ease-bouncy);
+    }
+
+    @keyframes usbPulse {
+      0% { transform: scale(0.96); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1.0); }
+    }
+
+    .audio-wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 16px;
+    }
+    .wave-bar {
+      width: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: waveDance 1.2s ease-in-out infinite alternate;
+    }
+    .wave-bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+    .wave-bar:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+    .wave-bar:nth-child(3) { height: 8px; animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { height: 16px; animation-delay: 0.4s; }
+    .wave-bar:nth-child(5) { height: 10px; animation-delay: 0.15s; }
+
+    @keyframes waveDance {
+      0% { transform: scaleY(0.3); }
+      100% { transform: scaleY(1.0); }
+    }
+
+    .island-expanded-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+    .island-art {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3B82F6, #7C3AED);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .island-track-meta {
+      flex: 1;
+      min-width: 0;
+    }
+    .island-track-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .island-track-artist {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .island-expanded-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .island-switchers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      justify-content: center;
+    }
+
+    /* ====================================================
+       3. HERO: DESKTOP WIDGETS (HUD & GLASS)
+       ==================================================== */
+    .widgets-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .widget-glass {
+      background: rgba(20, 20, 25, 0.78);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-l);
+      padding: 18px 20px;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      transition: transform var(--fade-fast) var(--ease-snappy), border-color var(--fade-fast);
+      cursor: grab;
+    }
+    .widget-glass:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .widget-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .widget-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+    .widget-val {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .hub-progress-track {
+      height: 5px;
+      background: var(--bg-control);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      position: relative;
+    }
+    .hub-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: var(--radius-pill);
+      transition: width 500ms var(--ease-snappy);
+    }
+
+    .clock-display {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .clock-time {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .clock-ampm {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .clock-date {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* ====================================================
+       4. HERO: CORE CONTROLS & COLOR TOKENS
+       ==================================================== */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      gap: 16px;
+    }
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+    .setting-info {
+      flex: 1;
+    }
+    .setting-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .setting-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .hub-toggle {
+      width: 38px;
+      height: 22px;
+      background: var(--bg-control);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-pill);
+      position: relative;
+      cursor: pointer;
+      transition: background-color var(--fade-base), border-color var(--fade-base);
+      flex-shrink: 0;
+    }
+    .hub-toggle.checked {
+      background: var(--accent);
+      border-color: var(--accent-hover);
+    }
+    .hub-toggle-thumb {
+      width: 16px;
+      height: 16px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      transition: transform 220ms var(--ease-snappy);
+    }
+    .hub-toggle.checked .hub-toggle-thumb {
+      transform: translateX(16px);
+    }
+    html[dir="rtl"] .hub-toggle.checked .hub-toggle-thumb {
+      transform: translateX(-16px);
+    }
+
+    .hub-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 160px;
+    }
+    .hub-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--bg-control);
+      border-radius: 2px;
+      outline: none;
+    }
+    .hub-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--text-primary);
+      border: 2px solid var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      transition: transform var(--fade-fast) var(--ease-snappy);
+    }
+    .hub-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    .hub-slider-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      width: 28px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .color-swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .swatch-card {
+      background: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-s);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform var(--fade-fast) var(--ease-snappy), border-color var(--fade-fast);
+    }
+    .swatch-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-hover);
+    }
+    .swatch-preview {
+      height: 34px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .swatch-name {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .swatch-hex {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--text-tertiary);
+    }
+
+    .physics-panel {
+      background: rgba(16, 185, 129, 0.04);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: var(--radius-l);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    footer.footer-bar {
+      border-top: 1px solid var(--border-subtle);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      background: rgba(11, 11, 13, 0.9);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="desktop-backdrop"></div>
+
+  <div class="app-shell">
+
+    <!-- TOP NAVIGATION -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
+          </svg>
+        </div>
+        <div class="brand-title">The Hub</div>
+        <span class="brand-badge">Motion & Radial Studio</span>
+      </div>
+
+      <div class="header-actions">
+        <!-- Bilingual toggle -->
+        <button class="hub-btn hub-btn-secondary" id="btnLangToggle">
+          🌐 <span id="lblLang">English</span>
+        </button>
+
+        <!-- Kill Switch -->
+        <button class="hub-btn hub-btn-danger" onclick="alert('Kill Switch Triggered')">
+          ⚠️ <span>طوارئ / Kill Switch</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="main-content">
+
+      <!-- ========================================================== -->
+      <!-- 1. HERO: RADIAL LAUNCHER WHEEL (Your Favorite!)            -->
+      <!-- ========================================================== -->
+      <section id="section-radial">
+        <div class="section-head">
+          <span class="section-tag" id="tagRadial">المكون الأساسي المفضل</span>
+          <h2 class="section-title" id="titleRadial">عجلة الإطلاق الشعاعية (Radial Launcher Wheel)</h2>
+          <p class="section-desc" id="descRadial">تتفتح الشرائح بتدرج زمني انسيابي (Staggered Fan-out). عند تمرير المؤشر فوق أي شريحة تكبر إلى 1.22x مع توهج الحافة وخفوت البقية.</p>
+        </div>
+
+        <div class="showcase-grid-2">
+          
+          <div class="hub-card">
+            <div class="radial-stage">
+              <div class="radial-wheel" id="radialWheel">
+                <!-- Center Core -->
+                <div class="radial-center-btn" id="radialCore" onclick="animateRadialBloom()">
+                  <div class="radial-center-title">THE HUB</div>
+                  <div class="radial-center-sub">ALT+Z</div>
+                </div>
+
+                <!-- 8 Radial Slices configured geometrically -->
+                <div class="radial-slice" style="--base-transform: translate(0px, -102px); transform: translate(0px, -102px);">
+                  🖥️
+                  <span class="slice-label">Workspaces</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(72px, -72px); transform: translate(72px, -72px);">
+                  🖼️
+                  <span class="slice-label">Wallpapers</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(102px, 0px); transform: translate(102px, 0px);">
+                  🤖
+                  <span class="slice-label">AI Sandbox</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(72px, 72px); transform: translate(72px, 72px);">
+                  🎵
+                  <span class="slice-label">Spotify</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(0px, 102px); transform: translate(0px, 102px);">
+                  ⚙️
+                  <span class="slice-label">Settings</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(-72px, 72px); transform: translate(-72px, 72px);">
+                  💻
+                  <span class="slice-label">Terminal</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(-102px, 0px); transform: translate(-102px, 0px);">
+                  🌐
+                  <span class="slice-label">Browser</span>
+                </div>
+                <div class="radial-slice" style="--base-transform: translate(-72px, -72px); transform: translate(-72px, -72px);">
+                  🔒
+                  <span class="slice-label">Lock / Focus</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 12px; margin-top: 18px;">
+              <button class="hub-btn hub-btn-primary" onclick="animateRadialBloom()">
+                🌀 إعادة حركة التفتح والانفراج (Fan-out Bloom)
+              </button>
+            </div>
+          </div>
+
+          <!-- Motion & Interaction Principles Details -->
+          <div class="hub-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 14px;" id="titleMotionTokens">رموز الحركة الفيزيائية (Motion Tokens)</h3>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                
+                <div style="padding: 12px 14px; background: var(--bg-control); border-radius: var(--radius-s); border: 1px solid var(--border-subtle);">
+                  <div style="display: flex; justify-content: space-between; font-weight: 600; color: var(--accent);">
+                    <span>Spring.Snappy</span>
+                    <span style="font-family: var(--font-mono); font-size: 11px;">stiffness 520, damping 34</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 3px;">
+                    للأزرار، القواطع (Toggles)، وتكبير شريحة العجلة فوراً مع حركة مؤشر الماوس بدون تأخير.
+                  </div>
+                </div>
+
+                <div style="padding: 12px 14px; background: var(--bg-control); border-radius: var(--radius-s); border: 1px solid var(--border-subtle);">
+                  <div style="display: flex; justify-content: space-between; font-weight: 600; color: var(--success);">
+                    <span>Spring.Bouncy</span>
+                    <span style="font-family: var(--font-mono); font-size: 11px;">stiffness 420, damping 20</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 3px;">
+                    لانفراج وانفتاح عجلة الـ Radial Launcher وتوسيع كبسولة Dynamic Island.
+                  </div>
+                </div>
+
+                <div style="padding: 12px 14px; background: var(--bg-control); border-radius: var(--radius-s); border: 1px solid var(--border-subtle);">
+                  <div style="display: flex; justify-content: space-between; font-weight: 600; color: #A78BFA;">
+                    <span>Spring.Smooth</span>
+                    <span style="font-family: var(--font-mono); font-size: 11px;">stiffness 320, damping 30</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 3px;">
+                    لحركة سحب النوافذ، الإغلاق الهادئ للعجلة عند الإفلات، وتبديل الخلفيات.
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="physics-panel" style="margin-top: 20px;">
+              <span style="font-size: 26px;">⚡</span>
+              <div style="font-size: 11.5px; color: var(--text-primary); line-height: 1.6;">
+                <strong>سرعة الاستجابة الصفرية (Zero Latency):</strong> يبدأ رسم العجلة في غضون <b>أقل من 150ms</b> من الضغط على الاختصار، وتتوقف الحسابات كلياً (0% CPU) بمجرد استقرار النابض.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ========================================================== -->
+      <!-- 2. HERO: DYNAMIC ISLAND LIVE SIMULATOR                     -->
+      <!-- ========================================================== -->
+      <section id="section-island">
+        <div class="section-head">
+          <span class="section-tag" id="tagIsland">المكون الأساسي الثاني</span>
+          <h2 class="section-title" id="titleIsland">محاكي Dynamic Island التفاعلي المباشر (Spring Physics)</h2>
+          <p class="section-desc" id="descIsland">تشوه الكبسولة (Capsule Morphing) وفق معادلات النوابض الفيزيائية ونظام الرموز في DESIGN_SYSTEM.md</p>
+        </div>
+
+        <div class="hub-card">
+          <div class="island-stage">
+            
+            <!-- Capsule Element -->
+            <div class="island-capsule state-idle" id="dynamicIsland">
+              
+              <!-- Content for Idle State -->
+              <div id="contentIdle" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <span style="font-size: 13px;">⚡</span>
+                <span style="font-size: 11px; font-weight: 600; color: #fff;">The Hub</span>
+                <span class="widget-dot"></span>
+              </div>
+
+              <!-- Content for Volume State -->
+              <div id="contentVolume" style="display: none; align-items: center; gap: 10px; width: 100%;">
+                <span style="font-size: 14px;">🔊</span>
+                <div class="hub-progress-track" style="flex: 1; height: 6px;">
+                  <div class="hub-progress-bar" id="islandVolumeBar" style="width: 72%;"></div>
+                </div>
+                <span style="font-family: var(--font-mono); font-size: 11px; color: #fff;" id="islandVolText">72%</span>
+              </div>
+
+              <!-- Content for Music Compact -->
+              <div id="contentMusicCompact" style="display: none; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 22px; height: 22px; border-radius: 6px; background: var(--violet); display: flex; align-items: center; justify-content: center; font-size: 11px;">🎵</div>
+                  <span style="font-size: 11.5px; font-weight: 600; color: #fff; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Midnight Resonance</span>
+                </div>
+                <div class="audio-wave">
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                </div>
+              </div>
+
+              <!-- Content for Music Expanded -->
+              <div id="contentMusicExpanded" style="display: none; width: 100%;">
+                <div class="island-expanded-top">
+                  <div class="island-art">🎧</div>
+                  <div class="island-track-meta">
+                    <div class="island-track-title">Midnight Resonance (Cyber Synth)</div>
+                    <div class="island-track-artist">The Hub Ambient Audio • 48kHz Hi-Fi</div>
+                  </div>
+                  <div class="audio-wave">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                  </div>
+                </div>
+                <div class="island-expanded-controls">
+                  <span style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-secondary);">01:42 / 03:50</span>
+                  <div style="display: flex; gap: 12px; align-items: center;">
+                    <span style="cursor: pointer; opacity: 0.8;">⏮</span>
+                    <span style="cursor: pointer; font-size: 18px; color: var(--accent);">⏸</span>
+                    <span style="cursor: pointer; opacity: 0.8;">⏭</span>
+                  </div>
+                  <span class="brand-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3);">Gaming Mode</span>
+                </div>
+              </div>
+
+              <!-- Content for USB Notification -->
+              <div id="contentUsb" style="display: none; align-items: center; gap: 10px; width: 100%;">
+                <span style="color: var(--success); font-size: 15px;">🔌</span>
+                <span style="font-size: 11px; font-weight: 600; color: #fff;">USB Drive Attached (D:)</span>
+                <span class="brand-badge" style="margin-inline-start: auto; font-size: 9px;">Ready</span>
+              </div>
+
+            </div>
+
+            <span class="island-stage-hint" id="lblIslandHint">👆 اضغط على الأزرار بالأسفل لتجربة حالات التمدد الفيزيائي</span>
+          </div>
+
+          <!-- Controls for Island simulation -->
+          <div class="island-switchers">
+            <button class="hub-btn hub-btn-secondary" onclick="setIslandState('state-idle')">خمول (Idle 140px)</button>
+            <button class="hub-btn hub-btn-secondary" onclick="setIslandState('state-volume')">مستوى الصوت (Volume HUD)</button>
+            <button class="hub-btn hub-btn-secondary" onclick="setIslandState('state-music-compact')">مشغل الموسيقى المدمج (Compact)</button>
+            <button class="hub-btn hub-btn-primary" onclick="setIslandState('state-music-expanded')">توسيع الكبسولة (Expanded Spring)</button>
+            <button class="hub-btn hub-btn-secondary" onclick="setIslandState('state-usb')">تنبيه USB المتصل (Pulse Event)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================== -->
+      <!-- 3. HERO: DESKTOP WIDGETS HUD                               -->
+      <!-- ========================================================== -->
+      <section id="section-widgets">
+        <div class="section-head">
+          <span class="section-tag" id="tagWidgets">الويدجتس والمراقبة الحية</span>
+          <h2 class="section-title" id="titleWidgets">ويدجتس سطح المكتب الزجاجية (HUD Desktop Widgets)</h2>
+          <p class="section-desc" id="descWidgets">زجاج داكن عالي التباين (Dark Glassmorphism) مع محاذاة مغناطيسية وتحديث حي للموارد.</p>
+        </div>
+
+        <div class="widgets-row">
+          
+          <!-- Clock Widget -->
+          <div class="widget-glass">
+            <div class="widget-header">
+              <span class="widget-title">
+                <span class="widget-dot"></span>
+                <span id="lblWidgetClock">الساعة الرقمية</span>
+              </span>
+              <span class="brand-badge">HUD CAPSULE</span>
+            </div>
+            <div class="clock-display">
+              <div class="clock-time" id="liveClock">13:20:45</div>
+              <div class="clock-ampm">PM</div>
+            </div>
+            <div class="clock-date" id="liveDate">الأربعاء، 28 أكتوبر 2026</div>
+          </div>
+
+          <!-- CPU Widget -->
+          <div class="widget-glass">
+            <div class="widget-header">
+              <span class="widget-title">
+                <span class="widget-dot" style="background: var(--accent); box-shadow: 0 0 6px var(--accent);"></span>
+                <span>CPU Load (16 Cores)</span>
+              </span>
+              <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-secondary);">4.2 GHz</span>
+            </div>
+            <div class="widget-val" id="cpuVal">24%</div>
+            <div class="hub-progress-track">
+              <div class="hub-progress-bar" id="cpuBar" style="width: 24%;"></div>
+            </div>
+          </div>
+
+          <!-- GPU Widget -->
+          <div class="widget-glass">
+            <div class="widget-header">
+              <span class="widget-title">
+                <span class="widget-dot" style="background: var(--success); box-shadow: 0 0 6px var(--success);"></span>
+                <span>GPU (RTX 4080)</span>
+              </span>
+              <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-secondary);">48°C</span>
+            </div>
+            <div class="widget-val" id="gpuVal">31%</div>
+            <div class="hub-progress-track">
+              <div class="hub-progress-bar" id="gpuBar" style="width: 31%; background: var(--success);"></div>
+            </div>
+          </div>
+
+          <!-- RAM Widget -->
+          <div class="widget-glass">
+            <div class="widget-header">
+              <span class="widget-title">
+                <span class="widget-dot" style="background: var(--warning); box-shadow: 0 0 6px var(--warning);"></span>
+                <span>RAM Allocation</span>
+              </span>
+              <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-secondary);">14.2 / 32 GB</span>
+            </div>
+            <div class="widget-val" id="ramVal">44%</div>
+            <div class="hub-progress-track">
+              <div class="hub-progress-bar" id="ramBar" style="width: 44%; background: var(--warning);"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ========================================================== -->
+      <!-- 4. HERO: CORE CONTROLS & COLOR TOKENS                      -->
+      <!-- ========================================================== -->
+      <section id="section-controls">
+        <div class="section-head">
+          <span class="section-tag" id="tagControls">المكونات القياسية</span>
+          <h2 class="section-title" id="titleControls">عناصر التحكم ونظام الألوان الموحد (Tokens & Controls)</h2>
+          <p class="section-desc" id="descControls">تطبيق مباشر لقواعد DESIGN_SYSTEM.md: أزرار HubButton، وقواطع HubToggle، والتحكم بالانزلاق HubSlider.</p>
+        </div>
+
+        <div class="showcase-grid-2">
+          
+          <!-- Controls Panel -->
+          <div class="hub-card">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #fff;">المكونات التفاعلية (Interactive Controls)</h3>
+
+            <!-- Buttons showcase -->
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;">
+              <button class="hub-btn hub-btn-primary">HubButton Primary</button>
+              <button class="hub-btn hub-btn-secondary">HubButton Secondary</button>
+              <button class="hub-btn hub-btn-ghost">HubButton Ghost</button>
+              <button class="hub-btn hub-btn-danger">HubButton Danger</button>
+            </div>
+
+            <!-- Setting rows -->
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">تفعيل الإيقاف التلقائي في الألعاب (Fullscreen Pause)</div>
+                <div class="setting-desc">إيقاف خلفيات الفيديو وحركات النوابض لتوفير موارد كرت الشاشة</div>
+              </div>
+              <div class="hub-toggle checked" onclick="toggleSwitch(this)">
+                <div class="hub-toggle-thumb"></div>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">شفافية الخلفية الزجاجية (Acrylic Blur Dimming)</div>
+                <div class="setting-desc">ضبط مستوى تدرج الشفافية للويدجتس ونافذة الإطلاق</div>
+              </div>
+              <div class="hub-slider-wrap">
+                <input type="range" min="10" max="100" value="85" class="hub-slider" oninput="document.getElementById('sliderVal1').innerText = this.value + '%'">
+                <span class="hub-slider-val" id="sliderVal1">85%</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">الحساسية المغناطيسية للويدجتس (Magnetic Snap)</div>
+                <div class="setting-desc">مسافة الالتقاط التلقائي لحواف الشاشة (16 بكسل)</div>
+              </div>
+              <div class="hub-toggle checked" onclick="toggleSwitch(this)">
+                <div class="hub-toggle-thumb"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Color Tokens Palette -->
+          <div class="hub-card">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 4px; color: #fff;">لوحة رموز الألوان القياسية (Color Tokens)</h3>
+            <p style="font-size: 11px; color: var(--text-secondary);">مستخرجة مباشرة من DESIGN_SYSTEM.md §2</p>
+
+            <div class="color-swatches-grid">
+              
+              <div class="swatch-card" onclick="copyHex('#0B0B0D')">
+                <div class="swatch-preview" style="background: #0B0B0D;"></div>
+                <div class="swatch-name">Bg.Window</div>
+                <div class="swatch-hex">#0B0B0D</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#141418')">
+                <div class="swatch-preview" style="background: #141418;"></div>
+                <div class="swatch-name">Bg.Card</div>
+                <div class="swatch-hex">#141418</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#1C1E2A')">
+                <div class="swatch-preview" style="background: #1C1E2A;"></div>
+                <div class="swatch-name">Bg.Raised</div>
+                <div class="swatch-hex">#1C1E2A</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#3B82F6')">
+                <div class="swatch-preview" style="background: #3B82F6;"></div>
+                <div class="swatch-name">Accent</div>
+                <div class="swatch-hex">#3B82F6</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#10B981')">
+                <div class="swatch-preview" style="background: #10B981;"></div>
+                <div class="swatch-name">Success</div>
+                <div class="swatch-hex">#10B981</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#EF4444')">
+                <div class="swatch-preview" style="background: #EF4444;"></div>
+                <div class="swatch-name">Danger</div>
+                <div class="swatch-hex">#EF4444</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#7C3AED')">
+                <div class="swatch-preview" style="background: #7C3AED;"></div>
+                <div class="swatch-name">Violet</div>
+                <div class="swatch-hex">#7C3AED</div>
+              </div>
+
+              <div class="swatch-card" onclick="copyHex('#E4E4E7')">
+                <div class="swatch-preview" style="background: #E4E4E7;"></div>
+                <div class="swatch-name">Text.Primary</div>
+                <div class="swatch-hex">#E4E4E7</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer-bar">
+      <div>The Hub • All-in-One Desktop Companion Design System Reference</div>
+      <div style="font-family: var(--font-mono); color: var(--accent);">
+        Host: http://localhost:5050
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Live Clock Update
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const el = document.getElementById('liveClock');
+      if (el) el.innerText = `${hours}:${minutes}:${seconds}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Hardware load fluctuating simulation
+    setInterval(() => {
+      const cpu = Math.floor(18 + Math.random() * 22);
+      const gpu = Math.floor(25 + Math.random() * 20);
+      const ram = Math.floor(40 + Math.random() * 10);
+
+      document.getElementById('cpuVal').innerText = cpu + '%';
+      document.getElementById('cpuBar').style.width = cpu + '%';
+
+      document.getElementById('gpuVal').innerText = gpu + '%';
+      document.getElementById('gpuBar').style.width = gpu + '%';
+
+      document.getElementById('ramVal').innerText = ram + '%';
+      document.getElementById('ramBar').style.width = ram + '%';
+    }, 2000);
+
+    // Dynamic Island State Switcher
+    const island = document.getElementById('dynamicIsland');
+    const contentIdle = document.getElementById('contentIdle');
+    const contentVolume = document.getElementById('contentVolume');
+    const contentMusicCompact = document.getElementById('contentMusicCompact');
+    const contentMusicExpanded = document.getElementById('contentMusicExpanded');
+    const contentUsb = document.getElementById('contentUsb');
+
+    function setIslandState(stateClass) {
+      contentIdle.style.display = 'none';
+      contentVolume.style.display = 'none';
+      contentMusicCompact.style.display = 'none';
+      contentMusicExpanded.style.display = 'none';
+      contentUsb.style.display = 'none';
+
+      island.className = 'island-capsule ' + stateClass;
+
+      setTimeout(() => {
+        if (stateClass === 'state-idle') {
+          contentIdle.style.display = 'flex';
+        } else if (stateClass === 'state-volume') {
+          contentVolume.style.display = 'flex';
+        } else if (stateClass === 'state-music-compact') {
+          contentMusicCompact.style.display = 'flex';
+        } else if (stateClass === 'state-music-expanded') {
+          contentMusicExpanded.style.display = 'block';
+        } else if (stateClass === 'state-usb') {
+          contentUsb.style.display = 'flex';
+        }
+      }, 70);
+    }
+
+    // Toggle switch
+    function toggleSwitch(el) {
+      el.classList.toggle('checked');
+    }
+
+    // Radial Bloom Animation
+    function animateRadialBloom() {
+      const wheel = document.getElementById('radialWheel');
+      wheel.style.transform = 'scale(0.8) rotate(-18deg)';
+      wheel.style.opacity = '0.35';
+
+      setTimeout(() => {
+        wheel.style.transform = 'scale(1) rotate(0deg)';
+        wheel.style.opacity = '1';
+      }, 120);
+    }
+
+    // Language Toggle
+    let currentLang = 'ar';
+    const btnLangToggle = document.getElementById('btnLangToggle');
+    const lblLang = document.getElementById('lblLang');
+
+    btnLangToggle.addEventListener('click', () => {
+      if (currentLang === 'ar') {
+        currentLang = 'en';
+        document.documentElement.dir = 'ltr';
+        document.documentElement.lang = 'en';
+        lblLang.innerText = 'العربية (RTL)';
+        applyEnglishLabels();
+      } else {
+        currentLang = 'ar';
+        document.documentElement.dir = 'rtl';
+        document.documentElement.lang = 'ar';
+        lblLang.innerText = 'English';
+        applyArabicLabels();
+      }
+    });
+
+    function applyEnglishLabels() {
+      document.getElementById('tagRadial').innerText = 'FAVORITE PRIMARY COMPONENT';
+      document.getElementById('titleRadial').innerText = 'Radial Launcher Wheel & Slice Targeting';
+      document.getElementById('descRadial').innerText = 'Staggered fan-out motion. Hovering scales slice to 1.22x with accent rim glow and dims neighbor slices.';
+      document.getElementById('tagIsland').innerText = 'PRIMARY SYSTEM COMPONENT 2';
+      document.getElementById('titleIsland').innerText = 'Dynamic Island Interactive Simulator (Spring Physics)';
+      document.getElementById('descIsland').innerText = 'High-fidelity simulation of capsule morphing driven by critically-damped spring mechanics in DESIGN_SYSTEM.md';
+      document.getElementById('lblIslandHint').innerText = '👆 Click the buttons below to trigger live physics morphing states';
+      document.getElementById('titleMotionTokens').innerText = 'Motion Tokens & Spring Physics';
+      document.getElementById('tagWidgets').innerText = 'DESKTOP MONITORING';
+      document.getElementById('titleWidgets').innerText = 'Glassmorphism Desktop HUD Widgets';
+      document.getElementById('descWidgets').innerText = 'Deep dark glass with magnetic 16px screen snap and real-time live telemetry.';
+      document.getElementById('lblWidgetClock').innerText = 'Digital Clock';
+      document.getElementById('tagControls').innerText = 'STANDARDIZED CONTROLS';
+      document.getElementById('titleControls').innerText = 'Unified Control Suite & Design Tokens';
+      document.getElementById('descControls').innerText = 'Direct verification of HubButton, HubToggle, and HubSlider tokens.';
+    }
+
+    function applyArabicLabels() {
+      document.getElementById('tagRadial').innerText = 'المكون الأساسي المفضل';
+      document.getElementById('titleRadial').innerText = 'عجلة الإطلاق الشعاعية (Radial Launcher Wheel)';
+      document.getElementById('descRadial').innerText = 'تتفتح الشرائح بتدرج زمني انسيابي (Staggered Fan-out). عند تمرير المؤشر فوق أي شريحة تكبر إلى 1.22x مع توهج الحافة وخفوت البقية.';
+      document.getElementById('tagIsland').innerText = 'المكون الأساسي الثاني';
+      document.getElementById('titleIsland').innerText = 'محاكي Dynamic Island التفاعلي المباشر (Spring Physics)';
+      document.getElementById('descIsland').innerText = 'تشوه الكبسولة (Capsule Morphing) وفق معادلات النوابض الفيزيائية ونظام الرموز في DESIGN_SYSTEM.md';
+      document.getElementById('lblIslandHint').innerText = '👆 اضغط على الأزرار بالأسفل لتجربة حالات التمدد الفيزيائي';
+      document.getElementById('titleMotionTokens').innerText = 'رموز الحركة الفيزيائية (Motion Tokens)';
+      document.getElementById('tagWidgets').innerText = 'الويدجتس والمراقبة الحية';
+      document.getElementById('titleWidgets').innerText = 'ويدجتس سطح المكتب الزجاجية (HUD Desktop Widgets)';
+      document.getElementById('descWidgets').innerText = 'زجاج داكن عالي التباين (Dark Glassmorphism) مع محاذاة مغناطيسية وتحديث حي للموارد.';
+      document.getElementById('lblWidgetClock').innerText = 'الساعة الرقمية';
+      document.getElementById('tagControls').innerText = 'المكونات القياسية';
+      document.getElementById('titleControls').innerText = 'عناصر التحكم ونظام الألوان الموحد (Tokens & Controls)';
+      document.getElementById('descControls').innerText = 'تطبيق مباشر لقواعد DESIGN_SYSTEM.md: أزرار HubButton، وقواطع HubToggle، والتحكم بالانزلاق HubSlider.';
+    }
+
+    function copyHex(hex) {
+      navigator.clipboard.writeText(hex);
+      alert('Copied token color: ' + hex);
+    }
+  </script>
+</body>
+</html>
