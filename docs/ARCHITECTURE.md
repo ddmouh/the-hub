@@ -1,59 +1,62 @@
 # ARCHITECTURE — The Hub
 
-Scope: how the app is built today, how it must be built, and how we migrate **in place** (same repo, same solution, no rewrite). Read `PRD.md` for what each module does and `DESIGN_SYSTEM.md` for how it looks and moves.
+## 1. Executive Summary & Vision
 
-## 1. Current state (facts from the code snapshot)
+**The Hub** is an integrated, high-performance Desktop Experience Companion for Windows 10/11 built on .NET 8 WPF. It consolidates multiple desktop customization utilities into a single, cohesive, resource-efficient system:
+1. **Dynamic Island Overlay** (context-aware morphing capsule for media, volume, mic, notifications, prayer times, pomodoro).
+2. **Radial Launcher** (low-latency gesture/hotkey-driven application and workspace wheel).
+3. **Hardware & Desktop Widgets** (independent, draggable, snap-aligned HUD widgets for CPU, GPU, RAM, Clock).
+4. **Live & Static Wallpaper Engine** (multi-monitor video/image engine with hardware-accelerated pause on fullscreen/battery).
+5. **Workspaces & Environment Launcher** (atomic multi-app snapshotting, launching, process isolation, and rollback).
+6. **AI Assistant with System Permissions** (sandboxed 4-tier intent parser, audit trail, and hardware emergency kill switch).
 
-| Item | Fact |
-|---|---|
-| Solution | `TheHub.sln`: `TheHub.App` (WinExe `TheHub`), `TheHub.Core`, `TheHub.Common`, `TheHub.Overlays`, `TheHub.Tests` |
-| Size | ~23k lines C#/XAML. `MainWindow.xaml.cs` ≈ 3,400 lines, `MainWindow.xaml` ≈ 2,350, `OverviewView.xaml` ≈ 850, `DynamicIslandWindow.xaml.cs` ≈ 1,150 |
-| Tests | One file (`HubCoreTests.cs`, ~417 lines) |
-| Process model | Single process. `App` creates overlay windows directly (`new RadialWindow()`, `new DynamicIslandWindow()` in `MainWindow.xaml.cs`) |
-| Dead code | `TheHub.Overlays` is `WinExe` with its own `App` + `NamedPipeServer` (old multi-process design, never launched). `Common/IPC` is its transport |
-| Windows | Island, Radial, Radial dimmer, Display dimmer, Live wallpaper (per monitor), Clock, CPU, GPU, RAM, Resource widgets |
-| System access | `Core/Native` (Win32, COM audio), `Core/Hooks` (low-level mouse/keyboard), `Core/Monitors` (Volume, MediaSession, Clipboard, ActiveApp, Fullscreen) |
-| Wallpaper engine | `FlyleafLib` + `Flyleaf.FFmpeg` (large native DLLs) |
-| Settings | One flat `AppSettings` object (`settings.json`) with ~60 properties, including `AIAuditLogs` |
-| Run path | Desktop shortcut → `TheHub-App\TheHub.exe`, a **copy** made by the `CopyToTheHubApp` MSBuild target after each build |
-| Measured idle | Working Set ≈ 250MB, Private ≈ 176–194MB, ~28→19 threads, ~950–990 handles |
+---
 
-### Known risks (ranked)
-1. **UI-thread blocking.** 17 `Dispatcher.Invoke` sites (10 in `MainWindow`, 3 in Island, 3 in dimmers, 1 in dead code). Monitor callbacks (COM `IAudioEndpointVolumeCallback`, media sessions, timers) can end up waiting on the UI thread while the UI thread calls back into COM.
-2. **God window.** Everything is wired in `MainWindow.xaml.cs`, so edits collide and agents "change" the wrong place.
-3. **Stale binary.** Running the copied `TheHub-App` exe hides failed builds. Fixed by build stamp + `dev-run.bat`.
-4. **Settings god-object** and audit log inside it.
-5. **Memory:** native video libraries are likely loaded even without an animated wallpaper (to be measured, task P0.6/P4.1).
-6. **No design system**, so layout bugs (overlapping header buttons) repeat. See `DESIGN_SYSTEM.md`.
+## 2. Solution Structure & Project Boundaries
 
-## 2. Target architecture (reached incrementally)
+The solution (`TheHub.sln`) comprises 6 focused projects enforcing strict separation of concerns:
 
 ```
-┌──────────────────────────── TheHub.App (shell) ────────────────────────────┐
-│ MainWindow (sidebar + frame only)   Pages: Overview, Wallpapers, Island,   │
-│ ViewModels per page (no logic in code-behind)  Radial, Workspaces, Widgets │
-└───────────────▲──────────────────────────────────────────────▲─────────────┘
-                │ commands / state                             │ views
-┌───────────────┴──────────┐   ┌──────────────────────────────┴─────────────┐
-│ TheHub.Core              │   │ TheHub.Overlays  (class library)           │
-│  ModuleHost + IHubModule │◄──┤  IslandModule  RadialModule  WidgetsModule │
-│  HubBus (typed events)   │   │  WallpaperModule  (each owns its windows)  │
-│  UiBridge (UI marshaling)│   └──────────────────────────────▲─────────────┘
-│  PowerPolicy             │                                  │ tokens + motion
-│  Monitors / Hooks / Native│  ┌──────────────────────────────┴─────────────┐
-│  Services                │   │ TheHub.Design (new WPF library)            │
-└───────────────▲──────────┘   │  Tokens.xaml  Motion/  Controls/           │
-                │              └────────────────────────────────────────────┘
-┌───────────────┴──────────┐
-│ TheHub.Common            │  Settings sections, models, logging
-└──────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             TheHub.App (WinExe)                             │
+│       Shell Host • MainWindow (Sidebar + Frame) • Application Pages         │
+│          [Under Refactoring: Extracting monolithic code into Pages]         │
+└───────────────────────▲──────────────────────────────────────▲──────────────┘
+                        │ Data / Commands                      │ Views / Windows
+┌───────────────────────┴──────────────────┐   ┌───────────────┴──────────────┐
+│ TheHub.Core (Library)                    │   │ TheHub.Overlays (Library)    │
+│  • HubBus (Channels-based Typed Bus)     │◄──┤  • DynamicIslandWindow       │
+│  • UiBridge (Coalesced UI Marshaling)    │   │  • RadialWindow & Canvas     │
+│  • ModuleHost & IHubModule Lifecycle     │   │  • Desktop Widgets (Clock/HW)│
+│  • PowerPolicy (Fullscreen/Battery)      │   │  • WallpaperWindow & Engine  │
+│  • Monitors & System Hooks               │   └───────────────▲──────────────┘
+│  • AIAssistant, Diagnostics & Watchdog   │                   │ Tokens & Controls
+└───────────────────────▲──────────────────┘   ┌───────────────┴──────────────┐
+                        │ Models & Settings    │ TheHub.Design (WPF Library)  │
+┌───────────────────────┴──────────────────┐   │  • Tokens.xaml (Design Tokens│
+│ TheHub.Common (Library)                  │   │  • Motion Engine (Spring)    │
+│  • SectionSettingsStore (Atomic Split)   │   │  • Core UI Controls          │
+│  • Domain Models & Logging               │   └──────────────────────────────┘
+└──────────────────────────────────────────┘
 ```
 
-`TheHub.Design` is a small library inside the same solution so both `App` and `Overlays` can share tokens, controls and the motion engine without circular references. It is **not** a rewrite.
+### Project Responsibilities
 
-## 3. Core contracts
+| Project | Type | Role & Boundaries |
+|---|---|---|
+| **`TheHub.Common`** | Library | Shared domain models (`AppSettings`, `WorkspaceConfig`, `WallpaperItem`), atomic section settings store (`SectionSettingsStore`), and zero-dependency logging (`AppLogger`). Does **not** reference WPF UI libraries. |
+| **`TheHub.Design`** | WPF Library | Shared visual foundation: color brushes, typography, corner radii, spacing tokens (`Tokens.xaml`), physics-based animation (`SpringAnimator`), and reusable controls (`SectionHeader`, `SettingRow`, `HubButton`). |
+| **`TheHub.Core`** | Library | In-process, non-blocking orchestration engine: `HubBus` event bus, `UiBridge` UI marshaler, `ModuleHost`, `PowerPolicy`, system hooks (mouse/keyboard), system monitors (audio, media, clipboard, window states), and `AIAssistantModule`. |
+| **`TheHub.Overlays`** | Library | Desktop overlay windows and visual modules: `IslandModule`, `RadialModule`, `WidgetsModule`, `WallpaperModule`. Owns the overlay windows, rendering them above other desktop windows without blocking the host process. |
+| **`TheHub.App`** | WinExe | Application entry point and primary desktop dashboard window (`MainWindow`). Hosts the navigation sidebar and views. |
+| **`TheHub.Tests`** | Test Project | Comprehensive automated test suite (109 xUnit unit and integration tests) verifying bus performance, state machines, isolation, settings persistence, and stress scenarios. |
 
-### 3.1 Modules
+---
+
+## 3. Core Architectural Contracts
+
+### 3.1 Module Lifecycle (`IHubModule` & `ModuleHost`)
+Every feature area operates as an independent module conforming to `IHubModule`:
 ```csharp
 public interface IHubModule : IDisposable
 {
@@ -65,73 +68,81 @@ public interface IHubModule : IDisposable
     void Resume(SuspendReason reason);
 }
 ```
-`ModuleHost` registers modules, starts those enabled in settings, wraps each call in try/catch (a faulted module is restarted at most 3 times, then marked `Faulted` and logged; the app keeps running), and exposes per-module enable/disable to the UI.
+* **Fault Tolerance:** `ModuleHost` manages module instances. If a module encounters an unhandled exception, it is restarted up to 3 times before being isolated as `Faulted`. A failing module never crashes the entire application.
+* **Power Policy Integration:** `PowerPolicy` listens to `FullscreenChanged` and `PowerStateChanged` bus events, automatically calling `Suspend()` on heavy rendering modules (e.g., video wallpapers, hardware polling) to ensure 0% background overhead during gaming or battery operation.
 
-### 3.2 Bus and UI marshaling
-```csharp
-public interface IHubBus
-{
-    void Publish<T>(T evt) where T : IHubEvent;       // never blocks, safe from any thread incl. COM callbacks
-    IDisposable Subscribe<T>(Action<T> handler) where T : IHubEvent;
-}
+### 3.2 Non-Blocking Event Bus (`HubBus`) & UI Marshaling (`UiBridge`)
+To eliminate UI freezes and deadlock hazards from Win32/COM callbacks:
+* **`IHubBus`:** Built on `System.Threading.Channels` (unbounded single-reader channel). Background monitors, audio endpoints, and hooks publish events instantaneously without locking or awaiting UI threads.
+* **`UiBridge`:** The single designated gateway to the WPF `Dispatcher`. It receives bus events, coalesces rapid updates (e.g., volume slider scrub or audio progress) per frame, and dispatches to UI components using `Dispatcher.InvokeAsync(..., DispatcherPriority.Normal)`.
+* **Zero UI Blocking Rule:** No component outside window code-behind may touch `Dispatcher`. Synchronous blocking calls (`.Result`, `.Wait()`, `Dispatcher.Invoke`) are strictly forbidden across the codebase.
+
+### 3.3 Atomic Sectional Settings Storage
+Settings are split into discrete, human-readable JSON files stored in `%AppData%\TheHub\`:
+* `app.json`: General app behavior, startup, theme, UI scale.
+* `island.json`: Dynamic Island geometry, behaviors, and active widgets.
+* `radial.json`: Radial wheel trigger keys, profiles, and shortcuts.
+* `wallpaper.json`: Active wallpapers, monitor assignments, pause rules.
+* `workspaces.json`: Environment workspace definitions and app lists.
+* `widgets.json`: Widget visibility, desktop coordinates, and pin states.
+* `assistant.json`: AI models, prompt templates, and security permission tiers.
+* `audit.jsonl`: Immutable append-only audit log for all automated actions.
+
+Writes are atomic (write to `.tmp` followed by `File.Move` replace) and debounced (500ms) to protect against corruption during power loss or abrupt shutdowns.
+
+---
+
+## 4. Current State vs. Architectural Gap Analysis
+
+While the underlying engine, modules, and test suite are robust (109/109 tests passing), an honest audit reveals a critical architectural gap in the presentation tier:
+
 ```
-- Implementation: `System.Threading.Channels` (unbounded, single reader loop).
-- `UiBridge` is the **only** place that touches `Dispatcher`: it batches events and calls `Dispatcher.InvokeAsync(..., DispatcherPriority.Normal)`; coalesces high-frequency events (volume, progress) to the latest value per frame.
-- Events (initial set): `MediaChanged`, `VolumeChanged`, `MicMuteChanged`, `BrightnessChanged`, `UsbChanged`, `ClipboardChanged`, `DownloadProgress`, `PrayerTimeDue`, `PomodoroTick`, `WorkspaceChanged`, `FullscreenChanged(isFullscreen, hwnd)`, `ActiveAppChanged`, `PowerStateChanged`, `SettingsChanged(section)`.
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ARCHITECTURAL GOAL:                                                         │
+│ MainWindow (< 400 lines) ─── Frame ───► Extracted Pages (UserControls)     │
+│   ├── OverviewPage.xaml       ├── WallpapersPage.xaml ├── IslandPage.xaml   │
+│   ├── RadialPage.xaml         ├── WorkspacesPage.xaml ├── WidgetsPage.xaml  │
+│   └── AssistantPage.xaml      └── OptionsPage.xaml                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ CURRENT REALITY:                                                            │
+│ MainWindow.xaml (2,358 lines) ─── Monolithic God Window                     │
+│ MainWindow.xaml.cs (3,519 lines) ─── 180 hardcoded controls & click handlers│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-### 3.3 PowerPolicy
-Single service subscribing to `FullscreenChanged` and `PowerStateChanged` plus Workspace flags. It decides which modules to `Suspend`/`Resume` according to settings (`WallpaperPauseOnFullscreen`, `IslandHideOnFullscreen`, `FullscreenProtection`, `LowPowerMode`...). Modules never poll fullscreen themselves.
+### Identified Gaps:
+1. **The God Window Problem:** `MainWindow.xaml.cs` currently acts as a monolithic container holding 3,519 lines. It directly instantiates overlay windows alongside their respective modules, creating duplicate instances and layout bugs.
+2. **Page Decoupling:** Pages must be extracted into standalone `UserControl` views with dedicated code-behind or ViewModels, reducing `MainWindow` to a pure navigation shell under 400 lines.
+3. **ModuleHost Unification:** `MainWindow` should not manage overlay lifetimes directly; `ModuleHost` must serve as the authoritative orchestrator.
+4. **Design Token Adoption:** Legacy inline brushes, borders, and button templates across pages must be replaced with `TheHub.Design` controls (`SectionHeader`, `SettingRow`, `HubButton`).
 
-## 4. Threading rules (hard rules)
+---
 
-1. **No `Dispatcher.Invoke`, no `.Result`, no `.Wait()`, no `GetAwaiter().GetResult()`** on any thread. Use `InvokeAsync` (only inside `UiBridge`) and `await`.
-2. **COM/native callbacks only enqueue**: they call `bus.Publish(...)` and return. No UI access, no further COM calls, no locks held while publishing.
-3. **COM calls happen on a dedicated STA/worker context** (`AudioService` queue), never on the UI thread.
-4. **Windows are created on the UI thread** by their module's `StartAsync` through `UiBridge`; never inside another module or `MainWindow`.
-5. Long work (file scan, device enumeration, icon extraction) uses `Task.Run` and returns data, not UI objects.
-6. Every `DispatcherUnhandledException` / `AppDomain.UnhandledException` / unobserved task exception is logged to `app_debug.log` with the module name.
-7. A UI watchdog (task P1.6) logs when the UI thread is unresponsive for more than 1.5s, with the last 20 breadcrumbs.
+## 5. Architectural Remediation Roadmap
 
-## 5. Settings
+To align the codebase with this architecture, execution proceeds in 3 structured phases:
 
-Split `AppSettings` into sections, one JSON file each under `%AppData%\TheHub\` (or the current settings folder), loaded and saved independently:
+### Phase A: Documentation & Architectural Truth (Immediate)
+- Establish canonical documentation in `docs/` (`README.md`, `ARCHITECTURE.md`, `PRD.md`, `DESIGN_SYSTEM.md`, `DECISIONS.md`).
+- Eliminate duplicate files and reconcile progress status.
+- Commit and push to Git.
 
-| File | Contents |
-|---|---|
-| `app.json` | StartWithWindows, FullscreenProtection, PerformanceMode, fonts, UI scale |
-| `wallpaper.json` | Wallpapers, ActiveWallpaperId, MonitorWallpapers, pause/mute/fit rules |
-| `island.json` | all `Island*` settings |
-| `radial.json` | all radial settings, `RadialProfiles` |
-| `workspaces.json` | `Workspaces` |
-| `widgets.json` | existing `WidgetsConfig` |
-| `assistant.json` | AI settings, permissions, kill switch |
-| `audit.jsonl` | AI audit log (append-only, rotated) |
+### Phase B: Shell & Page Decomposition (Next)
+- Create `TheHub.App/Pages/` directory.
+- Extract view sections from `MainWindow.xaml` into dedicated `UserControl` components:
+  1. `OverviewPage.xaml` (System metrics, status, quick toggles)
+  2. `WallpapersPage.xaml` (Monitor layout, wallpaper grid, import, pause rules)
+  3. `IslandPage.xaml` (Dynamic Island configuration, event toggles, scaling)
+  4. `RadialPage.xaml` (Wheel slice editor, trigger settings, profile manager)
+  5. `WorkspacesPage.xaml` (Batch launcher, app definitions, desktop snapshot)
+  6. `WidgetsPage.xaml` (Hardware widget toggles, positions, snapping)
+  7. `AssistantPage.xaml` (AI model selection, permissions, audit viewer)
+  8. `OptionsPage.xaml` (Startup behavior, hotkeys, performance profile)
+- Refactor `MainWindow.xaml` to host a navigation sidebar and a `Frame` / `ContentControl`.
+- Reduce `MainWindow.xaml.cs` to < 400 lines.
 
-Migration: on first launch, if `settings.json` exists, read it, write the new files, rename the old to `settings.json.migrated`. Reading must tolerate missing or extra fields. Writes are atomic (write temp, then replace) and debounced (500ms). A section change publishes `SettingsChanged(section)`.
-
-## 6. Performance budgets and measurement
-
-- Budgets live in `PRD.md` §5. They are enforced by `scratch/run_bench_10min.ps1` (exists) extended with an interaction phase: 50 volume changes, 20 media changes, island open/close x30, radial open x30, Workspace switch x10.
-- Output: CSV of RAM (Working Set + Private), CPU, threads, handles every 5 seconds, plus a summary. Every phase ends with a before/after table in the status note.
-- Handles must not grow more than ~5% over a 30-minute run; private bytes must plateau.
-
-## 7. Windows overlays (technical guidance, validate by measurement)
-
-- Transparent topmost windows (`AllowsTransparency=True`) must stay **small**. The Island host is fixed-size (largest state) and the visible capsule animates inside; pass clicks through outside the capsule (`WS_EX_TRANSPARENT` toggling or hit-test region) instead of resizing the window per frame.
-- Animate only `RenderTransform` (translate/scale), `Opacity`, and the capsule's own size/corner radius. Never animate blur/shadow effects. Use `BitmapCache` for static complex subtrees. Stop animation clocks when hidden or suspended.
-- Always-on-top windows must be hidden, not just transparent, while a module is suspended.
-
-## 8. Migration strategy (strangler, in place)
-
-1. Add new pieces beside the old (`Design`, `HubBus`, `ModuleHost`).
-2. Move one module at a time behind `IHubModule`; the old wiring in `MainWindow.xaml.cs` is deleted in the same task that replaces it.
-3. After each task: build, run tests, `dev-run.bat`, check the build stamp in the window title, run the benchmark, commit.
-4. Order: foundations → Island → Radial → Wallpaper → Workspaces → Widgets → Assistant (details and acceptance in `IMPLEMENTATION_PLAN.md`).
-5. File limit: no file over 400 lines after its module is migrated.
-
-## 9. Dev tooling (keep)
-
-- `dev-run.bat`: kill running instance → build → run; fails loudly on build error.
-- Build stamp in log and window title.
-- `scratch/run_bench_10min.ps1`: performance harness.
-- **Showcase exporter** (`Showcase/ScreenSnapshotExporter`, `ViewSnapshotRegistry`): keep as a **developer-only** visual QA tool started with `--showcase` (hidden from the sidebar in normal runs). It renders real screens to PNG, so every UI task can attach before/after images. Fix its hard-coded counts ("17 screens").
+### Phase C: ModuleHost Unification & Verification
+- Wire all module startups strictly through `ModuleHost`.
+- Eliminate duplicate widget and window instantiation.
+- Execute full test suite (`dotnet test`) and runtime verification (`dev-run.bat`).
+- Commit and push after every step.
