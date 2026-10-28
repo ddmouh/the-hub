@@ -164,10 +164,40 @@ public sealed class WidgetsModule : IHubModule
 
     private void EnsureWidgetsCreated()
     {
-        _clockWidget ??= new DesktopClockWidget();
-        _cpuWidget ??= new DesktopCpuWidget();
-        _gpuWidget ??= new DesktopGpuWidget();
-        _ramWidget ??= new DesktopRamWidget();
+        if (_clockWidget == null)
+        {
+            _clockWidget = new DesktopClockWidget();
+        }
+
+        if (_cpuWidget == null)
+        {
+            _cpuWidget = new DesktopCpuWidget();
+            if (_cpuWidget.Left == 0 && _cpuWidget.Top == 0)
+            {
+                _cpuWidget.Left = 24;
+                _cpuWidget.Top = 100;
+            }
+        }
+
+        if (_gpuWidget == null)
+        {
+            _gpuWidget = new DesktopGpuWidget();
+            if (_gpuWidget.Left == 0 && _gpuWidget.Top == 0)
+            {
+                _gpuWidget.Left = 24;
+                _gpuWidget.Top = 190;
+            }
+        }
+
+        if (_ramWidget == null)
+        {
+            _ramWidget = new DesktopRamWidget();
+            if (_ramWidget.Left == 0 && _ramWidget.Top == 0)
+            {
+                _ramWidget.Left = 24;
+                _ramWidget.Top = 280;
+            }
+        }
     }
 
     public void ApplySettingsToWidgets()

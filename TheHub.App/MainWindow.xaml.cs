@@ -468,49 +468,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private PerformanceCounter? _wsPrivateCounter;
-
     private double GetWorkingSetPrivateMb()
     {
-        try
-        {
-            if (_wsPrivateCounter == null)
-            {
-                int currentPid = Environment.ProcessId;
-                string procName = Process.GetCurrentProcess().ProcessName;
-                var category = new PerformanceCounterCategory("Process");
-                string[] instances = category.GetInstanceNames();
-
-                string? targetInstance = null;
-                foreach (var inst in instances)
-                {
-                    if (inst.StartsWith(procName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        try
-                        {
-                            using var pidCounter = new PerformanceCounter("Process", "ID Process", inst, true);
-                            if ((int)pidCounter.RawValue == currentPid)
-                            {
-                                targetInstance = inst;
-                                break;
-                            }
-                        }
-                        catch { }
-                    }
-                }
-
-                _wsPrivateCounter = new PerformanceCounter("Process", "Working Set - Private", targetInstance ?? procName, true);
-            }
-
-            float valBytes = _wsPrivateCounter.NextValue();
-            if (valBytes > 0)
-            {
-                return valBytes / (1024.0 * 1024.0);
-            }
-        }
-        catch { }
-
-        // Fallback: If PerformanceCounter is restricted or unavailable
         try
         {
             var proc = Process.GetCurrentProcess();
@@ -812,18 +771,101 @@ public partial class MainWindow : Window
         }
 
         e.Cancel = true;
-        ShowCustomExitDialog();
+        // Alt+F4 or system close safely minimizes to tray while keeping widgets & island running
+        Hide();
+        MemoryOptimizer.TrimMemory();
+    }
+
+    #region Hold-To-Confirm & Click-To-Hide Close Button Logic
+
+    private DispatcherTimer? _closeHoldTimer;
+    private bool _isCloseHolding;
+    private const int CloseHoldDurationMs = 1100;
+
+    private void OnCloseButtonPreviewDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _isCloseHolding = true;
+
+        if (BtnHeaderClose != null)
+        {
+            BtnHeaderClose.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(90, 239, 68, 68));
+            BtnHeaderClose.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(239, 68, 68));
+        }
+
+        if (_closeHoldTimer == null)
+        {
+            _closeHoldTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(CloseHoldDurationMs) };
+            _closeHoldTimer.Tick += OnCloseHoldTimerTick;
+        }
+        _closeHoldTimer.Stop();
+        _closeHoldTimer.Start();
+    }
+
+    private void OnCloseHoldTimerTick(object? sender, EventArgs e)
+    {
+        _closeHoldTimer?.Stop();
+        if (!_isCloseHolding) return;
+
+        _isCloseHolding = false;
+        AppLogger.Log("Close button long-press detected: ForceCompleteShutdown initiated");
+
+        if (BtnHeaderClose != null)
+        {
+            BtnHeaderClose.Content = "✕ EXIT";
+            BtnHeaderClose.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(239, 68, 68));
+        }
+
+        ForceCompleteShutdown();
+    }
+
+    private void OnCloseButtonPreviewUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (_isCloseHolding)
+        {
+            _closeHoldTimer?.Stop();
+            _isCloseHolding = false;
+            ResetCloseButtonAppearance();
+
+            // Single click action: Hide dashboard only, keeping overlays & widgets running!
+            AppLogger.Log("Close button clicked (single click): hiding dashboard to tray while keeping widgets & overlays active");
+            Hide();
+            MemoryOptimizer.TrimMemory();
+            e.Handled = true;
+        }
+    }
+
+    private void OnCloseButtonMouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_isCloseHolding)
+        {
+            _closeHoldTimer?.Stop();
+            _isCloseHolding = false;
+            ResetCloseButtonAppearance();
+        }
+    }
+
+    private void ResetCloseButtonAppearance()
+    {
+        if (BtnHeaderClose != null)
+        {
+            BtnHeaderClose.Content = "✕";
+            BtnHeaderClose.ClearValue(Button.BackgroundProperty);
+            BtnHeaderClose.ClearValue(Button.BorderBrushProperty);
+        }
     }
 
     private void OnCloseButtonClick(object sender, RoutedEventArgs e)
     {
-        ShowCustomExitDialog();
+        // Handled via PreviewMouseLeftButtonUp for exact single-click vs long-press distinction
     }
 
     private void OnCloseToTrayClick(object sender, RoutedEventArgs e)
     {
-        ShowCustomExitDialog();
+        Hide();
+        MemoryOptimizer.TrimMemory();
     }
+
+    #endregion
 
     public void ShowCustomExitDialog()
     {
@@ -2369,7 +2411,6 @@ public partial class MainWindow : Window
 
         // 2. Stop timers
         try { _ramTimer?.Stop(); } catch { }
-        try { _wsPrivateCounter?.Dispose(); } catch { }
 
         // 3. Remove tray icon immediately so no ghost icon remains in Windows taskbar
         try { _trayService?.Dispose(); } catch { }

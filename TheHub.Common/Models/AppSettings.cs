@@ -99,10 +99,10 @@ public class AppSettings
     public List<string> CustomFonts { get; set; } = new();
 
     // Desktop Widgets
-    public bool ShowClockWidget { get; set; } = true;
-    public bool ShowCpuWidget { get; set; } = true;
-    public bool ShowGpuWidget { get; set; } = true;
-    public bool ShowRamWidget { get; set; } = true;
+    public bool ShowClockWidget { get; set; } = false;
+    public bool ShowCpuWidget { get; set; } = false;
+    public bool ShowGpuWidget { get; set; } = false;
+    public bool ShowRamWidget { get; set; } = false;
     public double WidgetsOpacity { get; set; } = 90.0;
 
     public static AppSettings CreateDefault()

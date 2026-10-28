@@ -473,7 +473,13 @@
                     <TextBlock x:Name="RamUsageText" Text="RAM: ~50 MB" FontSize="11" Foreground="#A1A1AA" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <Button Content="—" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" Margin="0,0,4,0" Click="OnMinimizeClick" ToolTip="تصغير (Minimize)" WindowChrome.IsHitTestVisibleInChrome="True"/>
                     <Button Content="▢" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" Margin="0,0,4,0" Click="OnMaximizeClick" ToolTip="تكبير / استعادة (Maximize / Restore)" WindowChrome.IsHitTestVisibleInChrome="True"/>
-                    <Button Content="✕" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" Click="OnCloseButtonClick" ToolTip="إغلاق بالكامل (Close)" WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    <Button x:Name="BtnHeaderClose" Content="✕" Style="{StaticResource SecondaryButtonStyle}" Padding="10,2" 
+                            PreviewMouseLeftButtonDown="OnCloseButtonPreviewDown"
+                            PreviewMouseLeftButtonUp="OnCloseButtonPreviewUp"
+                            MouseLeave="OnCloseButtonMouseLeave"
+                            Click="OnCloseButtonClick" 
+                            ToolTip="ضغطة واحدة: إخفاء إلى الخلفية (تبقى الجزيرة والويدجتس شغالة)&#x0a;ضغطة مطولة (1 ثانية): إغلاق كامل للتطبيق" 
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
                 </StackPanel>
             </Grid>
         </Border>

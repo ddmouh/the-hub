@@ -82,10 +82,10 @@ public class WorkspacesSection
 public class WidgetsSection
 {
     public string ClockMode { get; set; } = "Analog";
-    public bool ShowClockWidget { get; set; } = true;
-    public bool ShowCpuWidget { get; set; } = true;
-    public bool ShowGpuWidget { get; set; } = true;
-    public bool ShowRamWidget { get; set; } = true;
+    public bool ShowClockWidget { get; set; } = false;
+    public bool ShowCpuWidget { get; set; } = false;
+    public bool ShowGpuWidget { get; set; } = false;
+    public bool ShowRamWidget { get; set; } = false;
     public double Opacity { get; set; } = 0.9;
 }
 
