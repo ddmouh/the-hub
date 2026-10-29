@@ -23,6 +23,7 @@
     <Color x:Key="Color.Success">#10B981</Color>
     <Color x:Key="Color.Warning">#F59E0B</Color>
     <Color x:Key="Color.Danger">#EF4444</Color>
+    <Color x:Key="Color.Danger.Soft">#29EF4444</Color>
     <Color x:Key="Color.Violet">#7C3AED</Color>
 
     <!-- Solid Brushes -->
@@ -42,6 +43,7 @@
     <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}"/>
     <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}"/>
     <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
+    <SolidColorBrush x:Key="Brush.Danger.Soft" Color="{StaticResource Color.Danger.Soft}"/>
     <SolidColorBrush x:Key="Brush.Violet" Color="{StaticResource Color.Violet}"/>
 
     <!-- Backward compatibility mappings with old ThemeDictionary keys -->

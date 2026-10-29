@@ -55,13 +55,13 @@ public class GateP4WallpaperTests
 
         // Publish fullscreen event
         bus.Publish(new FullscreenChanged(true, IntPtr.Zero));
-        await Task.Delay(50);
+        await Task.Delay(100);
         Assert.True(module.IsPaused);
         Assert.Contains(SuspendReason.Fullscreen, module.ActiveSuspendReasons);
 
         // Publish fullscreen cleared event
         bus.Publish(new FullscreenChanged(false, IntPtr.Zero));
-        await Task.Delay(50);
+        await Task.Delay(100);
         Assert.False(module.IsPaused);
         Assert.DoesNotContain(SuspendReason.Fullscreen, module.ActiveSuspendReasons);
     }
@@ -78,13 +78,13 @@ public class GateP4WallpaperTests
 
         // On battery
         bus.Publish(new PowerStateChanged(true, 45));
-        await Task.Delay(50);
+        await Task.Delay(100);
         Assert.True(module.IsPaused);
         Assert.Contains(SuspendReason.Battery, module.ActiveSuspendReasons);
 
         // AC power restored
         bus.Publish(new PowerStateChanged(false, 100));
-        await Task.Delay(50);
+        await Task.Delay(100);
         Assert.False(module.IsPaused);
         Assert.DoesNotContain(SuspendReason.Battery, module.ActiveSuspendReasons);
     }

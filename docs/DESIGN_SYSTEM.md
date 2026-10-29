@@ -32,6 +32,7 @@ Where it lives in code: `TheHub.Design` (new WPF library in the same solution): 
 | `Success` | `#10B981` | active, ready dot |
 | `Warning` | `#F59E0B` | |
 | `Danger` | `#EF4444` | kill switch, destructive |
+| `Danger.Soft` | `#EF4444` @ 16% (`#29EF4444`) | destructive button tint background |
 | `Violet` | `#7C3AED` | "LIVE" badges only |
 
 Rules: max one accent color visible per surface; status colors only for status; per-workspace/profile `AccentColor` may tint that item's icon and ring only.
@@ -66,7 +67,11 @@ Each component defines states: Rest, Hover, Pressed, Focused, Disabled (and Sele
 |---|---|
 | `HubButton` (Primary, Secondary, Ghost, Danger, Icon) | height 32 (Compact 28); icon + label with 8px gap |
 | `HubToggle` | 36x20 track, thumb slides with `Spring.Snappy` |
-| `HubSlider` | 4px track, 16px thumb, value tooltip while dragging |
+| `HubHoldButton` | Destructive confirm button; progressive linear fill over HoldDuration (1200ms default); clip-based inverted text; Spring.Snappy rollback on early release; ~1.2s confirmed success state. Variants: Danger, Neutral. |
+| `HubRangeSlider` | Dual 16px thumbs on 4px track, Accent fill segment, floating value tooltip bubble, MinimumDistance clamping, arrow/Tab navigation. |
+| `HubPillTabs` | Segmented pill container with sliding indicator animated via Spring.Smooth, RTL mirroring, and optional CollapseWhenIdle. |
+| `HubSlider` | Upgraded single thumb on 4px track with animated value tooltip bubble appearing with Fade.Fast on drag/adjust. |
+| `HubToggle` | Upgraded 36x20 track, thumb slides with Spring.Snappy, track color cross-fades Fade.Base, 1.15x press-stretch response. |
 | `HubChip` / `FilterChip` | pill; selected = `Accent` fill |
 | `HubCard` | `Bg.Card`, `Radius.L`, padding 16, optional header row (title + actions) |
 | `SettingRow` | label + description (left), control (right), min height 48; collapses to stacked layout under 560px |

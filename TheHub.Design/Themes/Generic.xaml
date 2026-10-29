@@ -1,0 +1,9 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/TheHub.Design;component/Tokens.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/TheHub.Design;component/Controls/CoreControls.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+</ResourceDictionary>
