@@ -20,7 +20,7 @@ public partial class IslandPage : UserControl
     private CoreHubManager? _core;
     private IslandModule? _islandModule;
     private OverviewViewModel? _overviewViewModel;
-    private bool _isInitializing = false;
+    private bool _isInitializing = true;
 
     public IslandPage()
     {
@@ -79,7 +79,7 @@ public partial class IslandPage : UserControl
     private void OnSettingToggled(object sender, RoutedEventArgs e)
     {
         if (_isInitializing) return;
-        if (ChkMedia == null || ChkVolume == null || ChkClipboard == null || ChkUsb == null) return;
+        if (ChkMedia == null || ChkVolume == null || ChkClipboard == null || ChkUsb == null || ChkAlwaysShowFullscreen == null || ChkLockPosition == null || ChkShowQuickControls == null || ChkShowMicMute == null || ChkShowBrightness == null || ChkShowActiveApp == null) return;
 
         var settings = SettingsManager.Current;
         settings.IslandShowMedia = ChkMedia.IsChecked ?? true;

@@ -39,7 +39,7 @@ public partial class OverviewPage : UserControl
     private DesktopRamWidget? _ramWidget;
     private IslandModule? _islandModule;
     private string _selectedMonitorTarget = "ALL";
-    private bool _isInitializing = false;
+    private bool _isInitializing = true;
 
     public Action<string, bool>? OnWallpaperSettingChangedCallback;
 
@@ -78,6 +78,38 @@ public partial class OverviewPage : UserControl
             _overviewViewModel.WidgetConfigChanged += OnWidgetConfigChanged;
             _overviewViewModel.ClockLockedChanged += SetClockWidgetLocked;
             _overviewViewModel.GaugesLockedChanged += SetResourceWidgetLocked;
+            _overviewViewModel.ClockActiveChanged = active =>
+            {
+                SettingsManager.Current.ShowClockWidget = active;
+                SettingsManager.SaveSettings();
+                _widgetsModule?.ApplySettingsToWidgets();
+            };
+            _overviewViewModel.CpuActiveChanged = active =>
+            {
+                SettingsManager.Current.ShowCpuWidget = active;
+                SettingsManager.SaveSettings();
+                _widgetsModule?.ApplySettingsToWidgets();
+            };
+            _overviewViewModel.GpuActiveChanged = active =>
+            {
+                SettingsManager.Current.ShowGpuWidget = active;
+                SettingsManager.SaveSettings();
+                _widgetsModule?.ApplySettingsToWidgets();
+            };
+            _overviewViewModel.RamActiveChanged = active =>
+            {
+                SettingsManager.Current.ShowRamWidget = active;
+                SettingsManager.SaveSettings();
+                _widgetsModule?.ApplySettingsToWidgets();
+            };
+            _overviewViewModel.GaugesActiveChanged = active =>
+            {
+                SettingsManager.Current.ShowCpuWidget = active;
+                SettingsManager.Current.ShowGpuWidget = active;
+                SettingsManager.Current.ShowRamWidget = active;
+                SettingsManager.SaveSettings();
+                _widgetsModule?.ApplySettingsToWidgets();
+            };
         }
 
         LoadSettings();
@@ -704,19 +736,24 @@ public partial class OverviewPage : UserControl
 
     private void SetClockWidgetLocked(bool locked)
     {
-        _clockWidget?.SetLockState(locked, clickThrough: locked);
+        var clock = _clockWidget ?? _widgetsModule?.ClockWidget;
+        clock?.SetLockState(locked, clickThrough: locked);
     }
 
     private void SetResourceWidgetLocked(bool locked)
     {
-        _cpuWidget?.SetLockState(locked, clickThrough: false);
-        _gpuWidget?.SetLockState(locked, clickThrough: false);
-        _ramWidget?.SetLockState(locked, clickThrough: false);
+        var cpu = _cpuWidget ?? _widgetsModule?.CpuWidget;
+        var gpu = _gpuWidget ?? _widgetsModule?.GpuWidget;
+        var ram = _ramWidget ?? _widgetsModule?.RamWidget;
+        cpu?.SetLockState(locked, clickThrough: false);
+        gpu?.SetLockState(locked, clickThrough: false);
+        ram?.SetLockState(locked, clickThrough: false);
     }
 
     private void OnWidgetConfigChanged(WidgetsConfig config)
     {
-        _clockWidget?.ApplyConfig(config);
+        var clock = _clockWidget ?? _widgetsModule?.ClockWidget;
+        clock?.ApplyConfig(config);
         ApplyDynamicIslandFont(config);
     }
 

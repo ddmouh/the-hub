@@ -34,7 +34,7 @@ public partial class RadialPage : UserControl
     private RadialWheelProfile? _selectedRadialProfile;
     private List<InstalledApp> _allInstalledApps = new();
     private string _addSourceMode = "Installed";
-    private bool _isInitializing = false;
+    private bool _isInitializing = true;
 
     public RadialPage()
     {
