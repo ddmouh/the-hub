@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TheHub.App"
         xmlns:controls="clr-namespace:TheHub.App.Controls"
-        xmlns:showcase="clr-namespace:TheHub.App.Showcase"
         xmlns:pages="clr-namespace:TheHub.App.Pages"
         xmlns:design="clr-namespace:TheHub.Design.Controls;assembly=TheHub.Design"
         Title="The Hub — Desktop Companion"
@@ -112,7 +111,6 @@
                         <RadioButton x:Name="NavBtnIsland" Content="🏝️  Dynamic Island" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="3"/>
                         <RadioButton x:Name="NavBtnAi" Content="🤖  AI Assistant" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="4"/>
                         <RadioButton x:Name="NavBtnOptions" Content="⚙️  Options" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="5"/>
-                        <RadioButton x:Name="NavBtnGallery" Content="🖼️  Showcase Gallery" Style="{StaticResource NavButtonStyle}" Checked="OnNavChecked" Tag="6" Visibility="Collapsed"/>
                     </StackPanel>
 
                     <!-- Bottom Quick Actions -->
@@ -139,10 +137,6 @@
                 <pages:AiAssistantPage x:Name="ViewAi" Visibility="Collapsed"/>
                 <pages:OptionsPage x:Name="ViewOptions" Visibility="Collapsed"/>
 
-                <!-- TAB 6: UI FLOW & SCREEN SHOWCASE GALLERY -->
-                <Grid x:Name="PageGallery" Visibility="Collapsed">
-                    <showcase:ScreensGalleryView/>
-                </Grid>
 
             </Grid>
         </Grid>

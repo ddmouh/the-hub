@@ -252,4 +252,26 @@ public class DesignControlsTests
     }
 
     #endregion
+    #region SettingRow Tests
+
+    [Fact]
+    public void SettingRow_Properties_CanBeSetAndRead()
+    {
+        RunOnSta(() =>
+        {
+            var row = new SettingRow
+            {
+                Title = "Auto-pause",
+                Description = "Pauses live video",
+                Content = new HubToggle { IsChecked = true }
+            };
+
+            Assert.Equal("Auto-pause", row.Title);
+            Assert.Equal("Pauses live video", row.Description);
+            Assert.IsType<HubToggle>(row.Content);
+            Assert.True(((HubToggle)row.Content).IsChecked);
+        });
+    }
+
+    #endregion
 }

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TheHub.App"
+             xmlns:design="clr-namespace:TheHub.Design.Controls;assembly=TheHub.Design"
              mc:Ignorable="d" 
              d:DesignHeight="1200" d:DesignWidth="850">
     <Grid>
@@ -23,13 +24,11 @@
         </StackPanel>
 
         <!-- Sub Tabs Navigation -->
-        <Border Grid.Row="1" Background="#111114" BorderBrush="#1F1F24" BorderThickness="1" CornerRadius="8" Padding="4" Margin="0,0,0,16">
-            <UniformGrid Columns="3">
-                <RadioButton x:Name="TabBtnOverviewWallpapers" Content="🎬 Wallpapers" Style="{StaticResource SubNavRadioButtonStyle}" IsChecked="True" Checked="OnOverviewSubTabChanged" Tag="0"/>
-                <RadioButton x:Name="TabBtnOverviewWidgets" Content="🧩 Widgets" Style="{StaticResource SubNavRadioButtonStyle}" Checked="OnOverviewSubTabChanged" Tag="1"/>
-                <RadioButton x:Name="TabBtnOverviewTaskbar" Content="⚡ Taskbar &amp; Dock" Style="{StaticResource SubNavRadioButtonStyle}" Checked="OnOverviewSubTabChanged" Tag="2"/>
-            </UniformGrid>
-        </Border>
+        <design:HubPillTabs x:Name="OverviewSubTabs" Grid.Row="1" SelectedIndex="0" SelectionChanged="OnOverviewSubTabsSelectionChanged" Margin="0,0,0,16">
+            <design:HubPillTabItem Content="Wallpapers"/>
+            <design:HubPillTabItem Content="Widgets"/>
+            <design:HubPillTabItem Content="Taskbar &amp; Dock"/>
+        </design:HubPillTabs>
 
         <!-- Sub Tab Panels Container -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,-6,0">
@@ -39,24 +38,45 @@
                 <StackPanel x:Name="SubPanelOverviewWallpapers" Visibility="Visible">
 
                     <!-- Wallpaper Options Toolbar -->
-                    <Border Background="#16191E" BorderBrush="#252A33" BorderThickness="1" CornerRadius="10" Padding="16,12" Margin="0,0,0,14">
-                        <Grid>
-                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkPauseWallpaperFullscreen" Content="Auto-pause in fullscreen/games" Foreground="#E4E4E7" FontSize="12" Margin="0,0,18,0" VerticalAlignment="Center" Checked="OnWallpaperSettingChanged" Unchecked="OnWallpaperSettingChanged" ToolTip="Pauses live video when full-screen apps or games run on that display"/>
-                                <CheckBox x:Name="ChkPauseWallpaperBattery" Content="Pause on battery power" Foreground="#E4E4E7" FontSize="12" Margin="0,0,18,0" VerticalAlignment="Center" Checked="OnWallpaperSettingChanged" Unchecked="OnWallpaperSettingChanged" ToolTip="Freezes live video wallpapers when running on battery power to conserve energy"/>
-                                <CheckBox x:Name="ChkMuteWallpaperAudio" Content="Mute sound" Foreground="#E4E4E7" FontSize="12" Margin="0,0,18,0" VerticalAlignment="Center" Checked="OnWallpaperMuteChanged" Unchecked="OnWallpaperMuteChanged"/>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                                    <TextBlock Text="Fit:" Foreground="#A1A1AA" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <ComboBox x:Name="CmbWallpaperFit" Width="95" Height="26" SelectionChanged="OnWallpaperFitSelectionChanged" FontSize="12">
+                    <Border Background="#16191E" BorderBrush="#252A33" BorderThickness="1" CornerRadius="10" Padding="16,10" Margin="0,0,0,14">
+                        <StackPanel>
+                            <design:SettingRow Title="Auto-pause in fullscreen/games"
+                                               Description="Pauses live video when full-screen apps or games run on that display">
+                                
+                                    <design:HubToggle x:Name="ChkPauseWallpaperFullscreen"
+                                                      Checked="OnWallpaperSettingChanged"
+                                                      Unchecked="OnWallpaperSettingChanged"/>
+                                
+                            </design:SettingRow>
+                            <design:SettingRow Title="Pause on battery power"
+                                               Description="Freezes live video wallpapers when running on battery power to conserve energy">
+                                
+                                    <design:HubToggle x:Name="ChkPauseWallpaperBattery"
+                                                      Checked="OnWallpaperSettingChanged"
+                                                      Unchecked="OnWallpaperSettingChanged"/>
+                                
+                            </design:SettingRow>
+                            <design:SettingRow Title="Mute sound"
+                                               Description="Mutes audio playback on animated video wallpapers">
+                                
+                                    <design:HubToggle x:Name="ChkMuteWallpaperAudio"
+                                                      Checked="OnWallpaperMuteChanged"
+                                                      Unchecked="OnWallpaperMuteChanged"/>
+                                
+                            </design:SettingRow>
+                            <design:SettingRow Title="Wallpaper Video Fit"
+                                               Description="Choose sizing aspect ratio mode across display monitor boundaries">
+                                
+                                    <ComboBox x:Name="CmbWallpaperFit" Width="120" Height="28" SelectionChanged="OnWallpaperFitSelectionChanged" FontSize="12">
                                         <ComboBoxItem Content="Fill" ToolTip="Fill screen (UniformToFill)"/>
                                         <ComboBoxItem Content="Fit" ToolTip="Fit entire video within screen (Uniform)"/>
                                         <ComboBoxItem Content="Stretch" ToolTip="Stretch video to screen boundaries (Fill)"/>
                                         <ComboBoxItem Content="Center" ToolTip="Center video in original aspect ratio"/>
                                         <ComboBoxItem Content="Span" ToolTip="Span video across multiple monitors"/>
                                     </ComboBox>
-                                </StackPanel>
-                            </WrapPanel>
-                        </Grid>
+                                
+                            </design:SettingRow>
+                        </StackPanel>
                     </Border>
 
                     <!-- Multi-Monitor Selector Card -->
@@ -155,7 +175,15 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <Button Grid.Column="0" Content="{Binding StatusText}" Style="{StaticResource SmallActionButtonStyle}" Background="{Binding StatusBackground}" Foreground="#FFFFFF" Tag="{Binding}" Click="OnApplyWallpaperCardClick" Margin="0,0,6,0"/>
-                                                <Button Grid.Column="1" Content="🗑️" Style="{StaticResource SmallActionButtonStyle}" Foreground="#F87171" Tag="{Binding}" Click="OnDeleteWallpaperCardClick" ToolTip="Delete this wallpaper"/>
+                                                <design:HubHoldButton Grid.Column="1"
+                                                                Width="32" Height="32" MinWidth="32"
+                                                                Variant="Danger" Padding="0"
+                                                                HoldingText="" ConfirmedText=""
+                                                                Tag="{Binding}"
+                                                                Confirmed="OnDeleteWallpaperCardClick"
+                                                                ToolTip="Hold to delete">
+                                                    <TextBlock Text="🗑" FontSize="12" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </design:HubHoldButton>
                                             </Grid>
                                         </Grid>
                                     </Grid>
@@ -200,23 +228,13 @@
                     </Border>
 
                     <!-- Card 2: Dynamic Taskbar State -->
-                    <Border Background="#16191E" BorderBrush="#252A33" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,14">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="⚡" FontSize="14" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Dynamic Taskbar State" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
-                                    </StackPanel>
-                                    <TextBlock Text="Automatically transition taskbar to pure clear when only desktop is visible, and smoothly restore Blur/Acrylic when application windows are maximized or focused." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0" TextWrapping="Wrap"/>
-                                </StackPanel>
-                                <CheckBox x:Name="ChkDynamicTaskbarState" Grid.Column="1" VerticalAlignment="Center" IsChecked="True"/>
-                            </Grid>
-                        </StackPanel>
+                    <Border Background="#16191E" BorderBrush="#252A33" BorderThickness="1" CornerRadius="10" Padding="16,10" Margin="0,0,0,14">
+                        <design:SettingRow Title="Dynamic Taskbar State"
+                                           Description="Automatically transition taskbar to pure clear when only desktop is visible, and smoothly restore Blur/Acrylic when application windows are maximized or focused.">
+                            
+                                <design:HubToggle x:Name="ChkDynamicTaskbarState" IsChecked="True"/>
+                            
+                        </design:SettingRow>
                     </Border>
                 </StackPanel>
             </StackPanel>

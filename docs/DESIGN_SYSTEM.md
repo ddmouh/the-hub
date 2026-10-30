@@ -74,6 +74,7 @@ Each component defines states: Rest, Hover, Pressed, Focused, Disabled (and Sele
 | `HubToggle` | Upgraded 36x20 track, thumb slides with Spring.Snappy, track color cross-fades Fade.Base, 1.15x press-stretch response. |
 | `HubChip` / `FilterChip` | pill; selected = `Accent` fill |
 | `HubCard` | `Bg.Card`, `Radius.L`, padding 16, optional header row (title + actions) |
+| `HubComboBox` | Dark tokenized dropdown (`Bg.Control`, `Border.Default`, `Radius.M`, `Bg.Raised` popup) replacing native white dropdowns |
 | `SettingRow` | label + description (left), control (right), min height 48; collapses to stacked layout under 560px |
 | `SectionHeader` | title + optional subtitle + right-aligned actions; **uses a wrapping layout, never fixed columns** |
 | `ModuleCard` | module name, state dot, enable toggle, quick stats (RAM/CPU), "Open settings" |
@@ -159,7 +160,7 @@ Timing: show duration `IslandDurationMs` (default 2500); hover pauses the dismis
 
 Overview · Wallpapers · Dynamic Island · Radial Launcher (Triggers, Appearance, Slices) · Workspaces · Widgets · Taskbar · Assistant · Options (Typography/UI scale, Custom fonts, Monitors) · Modals (Icon picker, Installed apps, Exit prompt (AR/EN), Color picker).
 
-Each screen spec in code review must include: the tokens used, widths tested, and a screenshot from the Showcase exporter.
+Each screen spec in code review must include: the tokens used, widths tested, and layout verification at target scales.
 
 ## 9. Visual QA checklist (every UI task)
 
@@ -168,4 +169,4 @@ Each screen spec in code review must include: the tokens used, widths tested, an
 - [ ] All states exist: rest, hover, pressed, focused, disabled.
 - [ ] All motion uses tokens; retargeting mid-animation looks correct.
 - [ ] Animations stop when the window is hidden or the module is suspended.
-- [ ] Showcase exporter screenshots attached (before/after).
+- [ ] Controls verified directly in live application pages at 900/1100/1400 widths.

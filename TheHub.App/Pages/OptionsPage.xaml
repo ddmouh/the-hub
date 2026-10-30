@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:design="clr-namespace:TheHub.Design.Controls;assembly=TheHub.Design" 
              mc:Ignorable="d" 
              d:DesignHeight="900" d:DesignWidth="800">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" Focusable="True" MinHeight="0">
@@ -76,7 +77,14 @@
                                             <TextBlock Text="{Binding FileName}" FontFamily="Consolas, monospace" FontSize="11" Foreground="#9CA3AF" Margin="0,1,0,0"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button Content="🗑️" Style="{StaticResource SmallActionButtonStyle}" Foreground="#F87171" Tag="{Binding FileName}" Click="OnDeleteFontClick" ToolTip="Delete this font"/>
+                                            <design:HubHoldButton Width="32" Height="32" MinWidth="32"
+                                                        Variant="Danger" Padding="0"
+                                                        HoldingText="" ConfirmedText=""
+                                                        Tag="{Binding FileName}"
+                                                        Confirmed="OnDeleteFontClick"
+                                                        ToolTip="Hold to delete">
+                                    <TextBlock Text="🗑" FontSize="12" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </design:HubHoldButton>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -110,13 +118,13 @@
                                 <TextBlock Text="Auto-pause in fullscreen / games" FontSize="12" FontWeight="SemiBold" Foreground="#E4E4E7"/>
                                 <TextBlock Text="Pauses live video when a full-screen app or game runs on that display" FontSize="11" Foreground="#71717A" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <CheckBox x:Name="ChkOptPauseFullscreen"
-                                      Grid.Column="1"
-                                      VerticalAlignment="Center"
-                                      Checked="OnOptionsWallpaperSettingChanged"
-                                      Unchecked="OnOptionsWallpaperSettingChanged"
-                                      Tag="PauseFullscreen"
-                                      ToolTip="Pauses live video when full-screen apps or games run on that display"/>
+                            <design:HubToggle x:Name="ChkOptPauseFullscreen"
+                                              Grid.Column="1"
+                                              VerticalAlignment="Center"
+                                              Checked="OnOptionsWallpaperSettingChanged"
+                                              Unchecked="OnOptionsWallpaperSettingChanged"
+                                              Tag="PauseFullscreen"
+                                              ToolTip="Pauses live video when full-screen apps or games run on that display"/>
                         </Grid>
                     </Border>
 
@@ -131,13 +139,13 @@
                                 <TextBlock Text="Pause on battery power" FontSize="12" FontWeight="SemiBold" Foreground="#E4E4E7"/>
                                 <TextBlock Text="Freezes live video wallpapers when running on battery to conserve energy" FontSize="11" Foreground="#71717A" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <CheckBox x:Name="ChkOptPauseBattery"
-                                      Grid.Column="1"
-                                      VerticalAlignment="Center"
-                                      Checked="OnOptionsWallpaperSettingChanged"
-                                      Unchecked="OnOptionsWallpaperSettingChanged"
-                                      Tag="PauseBattery"
-                                      ToolTip="Freezes live video wallpapers when running on battery power"/>
+                            <design:HubToggle x:Name="ChkOptPauseBattery"
+                                              Grid.Column="1"
+                                              VerticalAlignment="Center"
+                                              Checked="OnOptionsWallpaperSettingChanged"
+                                              Unchecked="OnOptionsWallpaperSettingChanged"
+                                              Tag="PauseBattery"
+                                              ToolTip="Freezes live video wallpapers when running on battery power"/>
                         </Grid>
                     </Border>
 
@@ -152,13 +160,13 @@
                                 <TextBlock Text="Mute wallpaper audio" FontSize="12" FontWeight="SemiBold" Foreground="#E4E4E7"/>
                                 <TextBlock Text="Silences any audio embedded in animated video wallpapers" FontSize="11" Foreground="#71717A" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <CheckBox x:Name="ChkOptMuteAudio"
-                                      Grid.Column="1"
-                                      VerticalAlignment="Center"
-                                      Checked="OnOptionsWallpaperSettingChanged"
-                                      Unchecked="OnOptionsWallpaperSettingChanged"
-                                      Tag="MuteAudio"
-                                      ToolTip="Mutes audio in animated video wallpapers"/>
+                            <design:HubToggle x:Name="ChkOptMuteAudio"
+                                              Grid.Column="1"
+                                              VerticalAlignment="Center"
+                                              Checked="OnOptionsWallpaperSettingChanged"
+                                              Unchecked="OnOptionsWallpaperSettingChanged"
+                                              Tag="MuteAudio"
+                                              ToolTip="Mutes audio in animated video wallpapers"/>
                         </Grid>
                     </Border>
                 </StackPanel>

@@ -148,6 +148,17 @@ public partial class OverviewPage : UserControl
         }
     }
 
+        private void OnOverviewSubTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SubPanelOverviewWallpapers == null || SubPanelOverviewWidgets == null ||
+            SubPanelOverviewTaskbar == null) return;
+
+        int tabIndex = OverviewSubTabs?.SelectedIndex ?? 0;
+        SubPanelOverviewWallpapers.Visibility = (tabIndex == 0) ? Visibility.Visible : Visibility.Collapsed;
+        SubPanelOverviewWidgets.Visibility = (tabIndex == 1) ? Visibility.Visible : Visibility.Collapsed;
+        SubPanelOverviewTaskbar.Visibility = (tabIndex == 2) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void OnOverviewSubTabChanged(object sender, RoutedEventArgs e)
     {
         if (SubPanelOverviewWallpapers == null || SubPanelOverviewWidgets == null ||
@@ -632,7 +643,7 @@ public partial class OverviewPage : UserControl
 
     private void OnApplyWallpaperCardClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is WallpaperItem item)
+        if (sender is FrameworkElement btn && btn.Tag is WallpaperItem item)
         {
             ApplyWallpaperItem(item);
             string targetDesc = string.Equals(_selectedMonitorTarget, "ALL", StringComparison.OrdinalIgnoreCase)
@@ -652,7 +663,7 @@ public partial class OverviewPage : UserControl
 
     private void OnDeleteWallpaperCardClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is WallpaperItem item)
+        if (sender is FrameworkElement btn && btn.Tag is WallpaperItem item)
         {
             var confirm = MessageBox.Show(
                 $"Are you sure you want to remove '{item.Title}'?",

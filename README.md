@@ -94,11 +94,6 @@ To start the application cleanly (terminating any running stale background insta
 .\dev-run.bat
 ```
 
-To run with developer showcase snapshot export:
-```powershell
-dotnet run --project TheHub.App -- --showcase
-```
-
 ---
 
 ## 5. Project Status & Roadmap

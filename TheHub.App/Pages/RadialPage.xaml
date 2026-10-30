@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:design="clr-namespace:TheHub.Design.Controls;assembly=TheHub.Design" 
              xmlns:controls="clr-namespace:TheHub.App.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="1200" d:DesignWidth="850">
@@ -28,14 +29,12 @@
             </StackPanel>
         </Grid>
 
-        <!-- Sub Tabs Navigation (Rovyl Style) -->
-        <Border Grid.Row="1" Background="#111114" BorderBrush="#1F1F24" BorderThickness="1" CornerRadius="8" Padding="4" Margin="0,0,0,16">
-            <UniformGrid Columns="3">
-                <RadioButton x:Name="TabBtnActivation" Content="⚡ Activation" Style="{StaticResource SubNavRadioButtonStyle}" IsChecked="True" Checked="OnRadialSubTabChanged" Tag="0"/>
-                <RadioButton x:Name="TabBtnAppearance" Content="🎨 Appearance" Style="{StaticResource SubNavRadioButtonStyle}" Checked="OnRadialSubTabChanged" Tag="1"/>
-                <RadioButton x:Name="TabBtnWorkspaces" Content="🎯 Wheel Slices" Style="{StaticResource SubNavRadioButtonStyle}" Checked="OnRadialSubTabChanged" Tag="2"/>
-            </UniformGrid>
-        </Border>
+        <!-- Sub Tabs Navigation -->
+        <design:HubPillTabs x:Name="RadialSubTabs" Grid.Row="1" SelectedIndex="0" SelectionChanged="OnRadialSubTabsSelectionChanged" Margin="0,0,0,16">
+            <design:HubPillTabItem Content="Activation"/>
+            <design:HubPillTabItem Content="Appearance"/>
+            <design:HubPillTabItem Content="Wheel Slices"/>
+        </design:HubPillTabs>
 
         <!-- Sub Tab Panels Container -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,-6,0">
@@ -76,7 +75,7 @@
                                 <TextBlock Text="Mouse Trigger" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 <TextBlock Text="Enable or disable invoking the radial wheel via physical mouse buttons." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
                             </StackPanel>
-                            <CheckBox x:Name="ChkMouseTrigger" Grid.Column="1" Style="{StaticResource ModernToggleSwitch}" IsChecked="True" Checked="OnMouseTriggerToggled" Unchecked="OnMouseTriggerToggled"/>
+                            <design:HubToggle x:Name="ChkMouseTrigger" Grid.Column="1" IsChecked="True" Checked="OnMouseTriggerToggled" Unchecked="OnMouseTriggerToggled"/>
                         </Grid>
                     </Border>
 
@@ -201,7 +200,7 @@
                                 </StackPanel>
                                 <TextBlock x:Name="TxtTileSizeValue" Grid.Column="1" Text="56 px" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
                             </Grid>
-                            <Slider x:Name="SldTileSize" Minimum="40" Maximum="80" Value="56" SmallChange="2" LargeChange="8" ValueChanged="OnTileSizeValueChanged" Margin="0,4,0,0"/>
+                            <design:HubSlider x:Name="SldTileSize" Minimum="40" Maximum="80" Value="56" SmallChange="2" LargeChange="8" ValueChanged="OnTileSizeValueChanged" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Border>
 
@@ -216,7 +215,7 @@
                                 <TextBlock Text="Persistent Labels" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                 <TextBlock Text="Keep shortcut title pills always visible around tiles instead of only upon hover." FontSize="11.5" Foreground="#71717A" Margin="0,3,0,0"/>
                             </StackPanel>
-                            <CheckBox x:Name="ChkPersistentLabels" Grid.Column="1" Style="{StaticResource ModernToggleSwitch}" Checked="OnPersistentLabelsToggled" Unchecked="OnPersistentLabelsToggled"/>
+                            <design:HubToggle x:Name="ChkPersistentLabels" Grid.Column="1" Checked="OnPersistentLabelsToggled" Unchecked="OnPersistentLabelsToggled"/>
                         </Grid>
                     </Border>
 
@@ -234,7 +233,7 @@
                                 </StackPanel>
                                 <TextBlock x:Name="TxtWheelOpacityValue" Grid.Column="1" Text="85%" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
                             </Grid>
-                            <Slider x:Name="SldWheelOpacity" Minimum="35" Maximum="100" Value="85" SmallChange="1" LargeChange="5" ValueChanged="OnWheelOpacityValueChanged"/>
+                            <design:HubSlider x:Name="SldWheelOpacity" Minimum="35" Maximum="100" Value="85" SmallChange="1" LargeChange="5" ValueChanged="OnWheelOpacityValueChanged"/>
                         </StackPanel>
                     </Border>
 
@@ -251,7 +250,7 @@
                                 </StackPanel>
                                 <TextBlock x:Name="TxtBackgroundDimmingValue" Grid.Column="1" Text="25%" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
                             </Grid>
-                            <Slider x:Name="SldBackgroundDimming" Minimum="0" Maximum="100" Value="25" SmallChange="1" LargeChange="10" ValueChanged="OnBackgroundDimmingValueChanged"/>
+                            <design:HubSlider x:Name="SldBackgroundDimming" Minimum="0" Maximum="100" Value="25" SmallChange="1" LargeChange="10" ValueChanged="OnBackgroundDimmingValueChanged"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -433,7 +432,13 @@
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button x:Name="WsEditorVisibilityBtn" Content="👁️ In Switcher" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" Click="OnWsEditorToggleVisibilityClick" ToolTip="Show/hide in radial switcher"/>
                                     <Button Content="▶ Launch All" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,6" Click="OnWsEditorLaunchAllClick" ToolTip="Launch all applications in this wheel"/>
-                                    <Button x:Name="WsEditorDeleteBtn" Content="🗑️ Delete" Style="{StaticResource DangerButtonStyle}" Padding="12,6" Click="OnWsEditorDeleteClick" ToolTip="Delete this wheel profile"/>
+                                    <design:HubHoldButton x:Name="WsEditorDeleteBtn" Width="140" Height="32"
+                                                Variant="Danger"
+                                                Content="🗑 Delete Profile"
+                                                HoldingText="Release to cancel"
+                                                ConfirmedText="Deleted"
+                                                Confirmed="OnWsEditorDeleteClick"
+                                                ToolTip="Hold to delete this wheel profile"/>
                                 </StackPanel>
                             </Grid>
 

@@ -18,7 +18,7 @@ Read before any work: `PRD.md` (what), `ARCHITECTURE.md` (how), `DESIGN_SYSTEM.m
    - `dotnet build TheHub.sln -c Debug` → 0 errors.
    - `dotnet test TheHub.sln` → all pass (new logic needs tests).
    - Run `dev-run.bat`. **Confirm the build number in the window title matches the build you just made.** If not, stop and fix the run path first.
-   - UI tasks: export Showcase screenshots (`--showcase`) and attach before/after.
+   - UI tasks: verify design tokens, layouts across target widths and scale factors.
    - Module tasks: run `scratch\run_bench_10min.ps1` and add the before/after table.
 4. Write a status note at the end of the task (Arabic, max 8 lines): what changed, evidence, measured numbers, what was deferred, risks.
 5. Never mark a task done if any acceptance check fails. Say which failed.
@@ -55,7 +55,6 @@ Read before any work: `PRD.md` (what), `ARCHITECTURE.md` (how), `DESIGN_SYSTEM.m
 | Test | `dotnet test TheHub.sln` |
 | Run (always use this) | `dev-run.bat` (kills running instance, builds, runs; fails on build error) |
 | Benchmark | `powershell -ExecutionPolicy Bypass -File scratch\run_bench_10min.ps1` |
-| Visual QA | `TheHub.exe --showcase` (developer-only gallery and PNG export) |
 
 ## 5. Definition of done (per task)
 

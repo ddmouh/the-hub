@@ -323,10 +323,7 @@ public partial class MainWindow : Window
             ViewIsland.Visibility = (index == 3) ? Visibility.Visible : Visibility.Collapsed;
             ViewAi.Visibility = (index == 4) ? Visibility.Visible : Visibility.Collapsed;
             ViewOptions.Visibility = (index == 5) ? Visibility.Visible : Visibility.Collapsed;
-            if (PageGallery != null)
-            {
-                PageGallery.Visibility = (index == 6) ? Visibility.Visible : Visibility.Collapsed;
-            }
+            
         }
     }
 
@@ -352,9 +349,9 @@ public partial class MainWindow : Window
             ViewIsland.Visibility = (pageIndex == 3) ? Visibility.Visible : Visibility.Collapsed;
             ViewAi.Visibility = (pageIndex == 4) ? Visibility.Visible : Visibility.Collapsed;
             ViewOptions.Visibility = (pageIndex == 5) ? Visibility.Visible : Visibility.Collapsed;
-            if (PageGallery != null) PageGallery.Visibility = (pageIndex == 6) ? Visibility.Visible : Visibility.Collapsed;
+            
 
-            var navRadios = new[] { NavBtnOverview, NavBtnWorkspaces, NavBtnRadial, NavBtnIsland, NavBtnAi, NavBtnOptions, NavBtnGallery };
+            var navRadios = new[] { NavBtnOverview, NavBtnWorkspaces, NavBtnRadial, NavBtnIsland, NavBtnAi, NavBtnOptions };
             if (pageIndex >= 0 && pageIndex < navRadios.Length && navRadios[pageIndex] != null)
             {
                 navRadios[pageIndex].IsChecked = true;

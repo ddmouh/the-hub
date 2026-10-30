@@ -144,7 +144,7 @@ public partial class WorkspacesPage : UserControl
 
     private void OnManageWorkspaceClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is WorkspaceConfig ws)
+        if (sender is FrameworkElement btn && btn.Tag is WorkspaceConfig ws)
         {
             OpenWorkspaceDetail(ws);
         }
@@ -238,7 +238,7 @@ public partial class WorkspacesPage : UserControl
 
     private void OnDeleteWorkspaceClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is WorkspaceConfig ws)
+        if (sender is FrameworkElement btn && btn.Tag is WorkspaceConfig ws)
         {
             var confirm = MessageBox.Show(
                 $"Are you sure you want to delete the '{ws.Name}' workspace category?\nThis will remove all associated shortcut configurations.",
@@ -289,7 +289,7 @@ public partial class WorkspacesPage : UserControl
 
     private void OnEditSingleAppClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is AppShortcut app && _selectedWorkspace != null)
+        if (sender is FrameworkElement btn && btn.Tag is AppShortcut app && _selectedWorkspace != null)
         {
             _editingApp = app;
             AppEditorTitleBlock.Text = $"Edit Application: {app.Title}";
@@ -394,7 +394,7 @@ public partial class WorkspacesPage : UserControl
 
     private void OnDeleteSingleAppClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is AppShortcut app && _selectedWorkspace != null)
+        if (sender is FrameworkElement btn && btn.Tag is AppShortcut app && _selectedWorkspace != null)
         {
             _selectedWorkspace.Apps.Remove(app);
             SettingsManager.SaveSettings();

@@ -155,6 +155,21 @@ public partial class RadialPage : UserControl
         LoadInstalledAppsSuggestions();
     }
 
+        private void OnRadialSubTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SubPanelActivation == null || SubPanelAppearance == null || SubPanelWorkspaces == null) return;
+
+        int tabIndex = RadialSubTabs?.SelectedIndex ?? 0;
+        SubPanelActivation.Visibility = (tabIndex == 0) ? Visibility.Visible : Visibility.Collapsed;
+        SubPanelAppearance.Visibility = (tabIndex == 1) ? Visibility.Visible : Visibility.Collapsed;
+        SubPanelWorkspaces.Visibility = (tabIndex == 2) ? Visibility.Visible : Visibility.Collapsed;
+
+        if (tabIndex == 2)
+        {
+            RefreshWorkspacesCards();
+        }
+    }
+
     private void OnRadialSubTabChanged(object sender, RoutedEventArgs e)
     {
         if (SubPanelActivation == null || SubPanelAppearance == null || SubPanelWorkspaces == null) return;

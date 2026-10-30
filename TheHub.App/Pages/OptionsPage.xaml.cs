@@ -88,7 +88,7 @@ public partial class OptionsPage : UserControl
 
     private void OnDeleteFontClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is string fileName)
+        if (sender is FrameworkElement btn && btn.Tag is string fileName)
         {
             var confirm = MessageBox.Show(
                 $"Are you sure you want to delete the installed font '{fileName}'?",
