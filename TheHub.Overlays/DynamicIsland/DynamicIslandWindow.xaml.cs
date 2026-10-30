@@ -791,6 +791,7 @@ public partial class DynamicIslandWindow : Window
 
     private void OnIslandMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (!IsLoaded || PresentationSource.FromVisual(this) == null) return;
         if (SettingsManager.Current.IslandLockPosition) return;
         if (IsClickOnInteractiveControl(e.OriginalSource as DependencyObject)) return;
 
@@ -805,6 +806,7 @@ public partial class DynamicIslandWindow : Window
     {
         if (_isDragging && e.LeftButton == MouseButtonState.Pressed)
         {
+            if (!IsLoaded || PresentationSource.FromVisual(this) == null) return;
             Point currentScreen = PointToScreen(e.GetPosition(this));
             Left = _dragStartLeft + (currentScreen.X - _dragStartScreen.X);
             Top = _dragStartTop + (currentScreen.Y - _dragStartScreen.Y);

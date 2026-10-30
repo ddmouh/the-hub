@@ -74,6 +74,16 @@ public class LowLevelMouseHook : IDisposable
     {
         if (nCode >= 0 && _activeInstance != null)
         {
+            int msg = (int)(long)wParam;
+            var inst = _activeInstance;
+
+            // ULTRA-FAST PATH: Ignore all mouse moves when wheel is inactive.
+            // Zero allocations, zero marshaling, zero settings queries on 99.9% of mouse messages.
+            if (msg == Win32Api.WM_MOUSEMOVE && !inst._isWheelActive)
+            {
+                return Win32Api.CallNextHookEx(_hookId, nCode, wParam, lParam);
+            }
+
             try
             {
                 var settings = SettingsManager.Current;
@@ -82,8 +92,6 @@ public class LowLevelMouseHook : IDisposable
                     return Win32Api.CallNextHookEx(_hookId, nCode, wParam, lParam);
                 }
 
-                int msg = (int)(long)wParam;
-                var inst = _activeInstance;
                 var hookStruct = Marshal.PtrToStructure<Win32Api.MSLLHOOKSTRUCT>(lParam);
 
                 bool isDown = IsMatchingMouseDown(msg, hookStruct.mouseData, settings.MouseTriggerButton);

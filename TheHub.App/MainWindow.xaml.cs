@@ -74,17 +74,25 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        AppLogger.Log("MainWindow.ctor started");
+        var sw = Stopwatch.StartNew();
+        AppLogger.Log($"[PERF] MainWindow.ctor started: 0ms");
         InitializeComponent();
+        AppLogger.Log($"[PERF] InitializeComponent finished: {sw.ElapsedMilliseconds}ms");
 
         _core = new CoreHubManager();
+        AppLogger.Log($"[PERF] CoreHubManager created: {sw.ElapsedMilliseconds}ms");
 
         _islandModule = new IslandModule(HubBus.Default, UiBridge.Instance);
+        AppLogger.Log($"[PERF] IslandModule created: {sw.ElapsedMilliseconds}ms");
+
         _wallpaperManager = new WallpaperManager();
+        AppLogger.Log($"[PERF] WallpaperManager created: {sw.ElapsedMilliseconds}ms");
+
         _wallpaperModule = new WallpaperModule(HubBus.Default, UiBridge.Instance, _wallpaperManager);
         _workspaceModule = new WorkspaceModule(HubBus.Default, UiBridge.Instance);
         _widgetsModule = new WidgetsModule(HubBus.Default, UiBridge.Instance);
         _aiAssistantModule = new AIAssistantModule(HubBus.Default, UiBridge.Instance);
+        AppLogger.Log($"[PERF] Modules created: {sw.ElapsedMilliseconds}ms");
 
         _trayService = new TrayIconService();
         _trayService.OpenMainWindowRequested += () => Dispatcher.Invoke(() =>
@@ -127,23 +135,34 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        AppLogger.Log("MainWindow.OnLoaded started");
+        var sw = Stopwatch.StartNew();
+        AppLogger.Log($"[PERF] MainWindow.OnLoaded started: 0ms");
         try
         {
             // 1. Initialize Pages with injected singletons
             ViewOverview.Initialize(_wallpaperManager, _wallpaperModule, _widgetsModule, _core, _overviewViewModel, _islandModule);
+            AppLogger.Log($"[PERF] ViewOverview.Initialize: {sw.ElapsedMilliseconds}ms");
+
             ViewWorkspaces.Initialize(_workspaceModule, _core);
+            AppLogger.Log($"[PERF] ViewWorkspaces.Initialize: {sw.ElapsedMilliseconds}ms");
+
             ViewRadial.Initialize(_radialWindow, _core);
+            AppLogger.Log($"[PERF] ViewRadial.Initialize: {sw.ElapsedMilliseconds}ms");
+
             ViewIsland.Initialize(_core, _islandModule, _overviewViewModel);
+            AppLogger.Log($"[PERF] ViewIsland.Initialize: {sw.ElapsedMilliseconds}ms");
+
             ViewAi.Initialize(_aiAssistantModule);
+            AppLogger.Log($"[PERF] ViewAi.Initialize: {sw.ElapsedMilliseconds}ms");
+
             ViewOptions.Initialize(_overviewViewModel);
+            AppLogger.Log($"[PERF] ViewOptions.Initialize: {sw.ElapsedMilliseconds}ms");
 
             // 2. Wire Modal Requests from pages
             ViewWorkspaces.RequestIconPicker = (currentGlyph, callback) => OpenIconPickerModal(callback);
             ViewWorkspaces.RequestInstalledAppPicker = callback => OpenInstalledAppsModal(callback);
 
-            // 3. Populate Curated Icons in Modal
-            InitCuratedIcons();
+            // 3. Modals initialized on-demand (lazy)
 
             // 4. Start Modules Asynchronously in background to keep UI startup instant
             _ = Task.Run(async () =>
@@ -495,12 +514,15 @@ public partial class MainWindow : Window
 
     private void InitCuratedIcons()
     {
-        _allCuratedIcons = IconGallery.Icons;
-        FilterAndDisplayIcons();
+        if (_allCuratedIcons == null || _allCuratedIcons.Count == 0)
+        {
+            _allCuratedIcons = IconGallery.Icons;
+        }
     }
 
     public void OpenIconPickerModal(Action<string> onSelected)
     {
+        InitCuratedIcons();
         _onIconSelectedTarget = onSelected;
         IconSearchBox.Text = "";
         _iconSearchQuery = "";

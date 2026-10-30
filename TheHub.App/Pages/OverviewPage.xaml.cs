@@ -113,7 +113,7 @@ public partial class OverviewPage : UserControl
         }
 
         LoadSettings();
-        RestoreActiveWallpapers();
+        Dispatcher.InvokeAsync(RestoreActiveWallpapers, System.Windows.Threading.DispatcherPriority.Background);
     }
 
     public void LoadSettings()

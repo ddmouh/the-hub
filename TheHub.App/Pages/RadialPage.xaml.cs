@@ -151,8 +151,6 @@ public partial class RadialPage : UserControl
         WsEditorCurrentAppsList.ItemsSource = profile.Slices;
         WsEditorSliceCountText.Text = $"{profile.Slices.Count} items";
         WsEditorEmptyPrompt.Visibility = (profile.Slices.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
-
-        LoadInstalledAppsSuggestions();
     }
 
         private void OnRadialSubTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -167,6 +165,10 @@ public partial class RadialPage : UserControl
         if (tabIndex == 2)
         {
             RefreshWorkspacesCards();
+            if (_allInstalledApps.Count == 0)
+            {
+                LoadInstalledAppsSuggestions();
+            }
         }
     }
 

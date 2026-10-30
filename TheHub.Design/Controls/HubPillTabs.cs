@@ -59,8 +59,8 @@ public class HubPillTabs : ListBox
     public HubPillTabs()
     {
         SelectionMode = SelectionMode.Single;
-        Loaded += (s, e) => Dispatcher.InvokeAsync(UpdateIndicatorPosition, DispatcherPriority.Loaded);
-        SizeChanged += (s, e) => Dispatcher.InvokeAsync(UpdateIndicatorPosition, DispatcherPriority.Render);
+        Loaded += (s, e) => Dispatcher.InvokeAsync(() => UpdateIndicatorPosition(true), DispatcherPriority.Loaded);
+        SizeChanged += (s, e) => Dispatcher.InvokeAsync(() => UpdateIndicatorPosition(true), DispatcherPriority.Normal);
 
         MouseEnter += OnTabsMouseEnter;
         MouseLeave += OnTabsMouseLeave;
@@ -83,13 +83,13 @@ public class HubPillTabs : ListBox
             _indicator.RenderTransform = group;
         }
 
-        Dispatcher.InvokeAsync(UpdateIndicatorPosition, DispatcherPriority.Loaded);
+        Dispatcher.InvokeAsync(() => UpdateIndicatorPosition(true), DispatcherPriority.Loaded);
     }
 
     protected override void OnSelectionChanged(SelectionChangedEventArgs e)
     {
         base.OnSelectionChanged(e);
-        Dispatcher.InvokeAsync(UpdateIndicatorPosition, DispatcherPriority.Render);
+        Dispatcher.InvokeAsync(() => UpdateIndicatorPosition(false), DispatcherPriority.Render);
     }
 
     private static void OnCollapseWhenIdleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -148,10 +148,10 @@ public class HubPillTabs : ListBox
                 }
             }
         }
-        Dispatcher.InvokeAsync(UpdateIndicatorPosition, DispatcherPriority.Render);
+        Dispatcher.InvokeAsync(() => UpdateIndicatorPosition(true), DispatcherPriority.Normal);
     }
 
-    public void UpdateIndicatorPosition()
+    public void UpdateIndicatorPosition(bool instant = false)
     {
         if (_indicator == null || SelectedIndex < 0 || SelectedIndex >= Items.Count)
         {
@@ -176,9 +176,14 @@ public class HubPillTabs : ListBox
 
             _indicator.Opacity = 1.0;
 
-            if (_currentIndicatorWidth <= 0)
+            string animKeyX = $"pill_x_{GetHashCode()}";
+            string animKeyW = $"pill_w_{GetHashCode()}";
+
+            if (instant || _currentIndicatorWidth <= 0)
             {
-                // First initialization - instant placement
+                // First initialization or resize pass - instant placement
+                SpringAnimator.StopAnimation(animKeyX);
+                SpringAnimator.StopAnimation(animKeyW);
                 _currentIndicatorX = targetX;
                 _currentIndicatorWidth = targetWidth;
                 _indicatorTranslate.X = targetX;
@@ -187,8 +192,6 @@ public class HubPillTabs : ListBox
             }
 
             // Animate position using Spring.Smooth
-            string animKeyX = $"pill_x_{GetHashCode()}";
-            string animKeyW = $"pill_w_{GetHashCode()}";
 
             double startX = _currentIndicatorX;
             double startW = _currentIndicatorWidth;

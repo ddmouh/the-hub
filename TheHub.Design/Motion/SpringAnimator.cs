@@ -184,6 +184,14 @@ public static class SpringAnimator
         Action<double> onUpdate,
         Action? onCompleted = null)
     {
+        if (Math.Abs(initial - target) < 0.001)
+        {
+            StopAnimation(key);
+            onUpdate(target);
+            onCompleted?.Invoke();
+            return;
+        }
+
         var anim = new ValueSpringAnimation(initial, target, config, onUpdate, onCompleted);
         StartAnimation(key, anim);
     }
